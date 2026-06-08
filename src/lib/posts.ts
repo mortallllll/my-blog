@@ -230,17 +230,20 @@ export async function deletePost(slug: string): Promise<boolean> {
 
 // ========== Seed initial data to KV (call on first deploy) ==========
 
-/** Seed KV store with articles from content/ directory */
+/** Sync content/*.md files into KV store (incremental — only adds new) */
 export async function seedKvFromFiles(): Promise<number> {
   if (!isKvAvailable()) return 0;
 
-  const existing = await kv.smembers(KV_SLUGS_KEY);
-  if (existing && existing.length > 0) return existing.length; // Already seeded
-
   const posts = fileGetAllPosts(true);
+  let count = 0;
+
   for (const post of posts) {
-    await kv.set(`${KV_POST_PREFIX}${post.slug}`, post);
-    await kv.sadd(KV_SLUGS_KEY, post.slug);
+    const exists = await kv.exists(`${KV_POST_PREFIX}${post.slug}`);
+    if (!exists) {
+      await kv.set(`${KV_POST_PREFIX}${post.slug}`, post);
+      await kv.sadd(KV_SLUGS_KEY, post.slug);
+      count++;
+    }
   }
-  return posts.length;
+  return count;
 }
