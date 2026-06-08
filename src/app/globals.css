@@ -22,5 +22,66 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+}
+
+/* Markdown content styling (prose fallback) */
+.prose h1 { font-size: 2rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; }
+.prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 1.75rem; margin-bottom: 0.75rem; }
+.prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+.prose p { margin-top: 0.75rem; margin-bottom: 0.75rem; line-height: 1.75; }
+.prose ul, .prose ol { padding-left: 1.5rem; margin-top: 0.75rem; margin-bottom: 0.75rem; }
+.prose li { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+.prose blockquote {
+  border-left: 4px solid #d4d4d8;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #71717a;
+  font-style: italic;
+}
+.prose code {
+  background: #f4f4f5;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  font-family: var(--font-mono, monospace);
+}
+.prose pre {
+  background: #18181b;
+  color: #e4e4e7;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+.prose a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+.prose img {
+  border-radius: 0.5rem;
+  max-width: 100%;
+}
+.prose strong { font-weight: 600; }
+
+/* Dark mode prose */
+@media (prefers-color-scheme: dark) {
+  .prose blockquote {
+    border-left-color: #3f3f46;
+    color: #a1a1aa;
+  }
+  .prose code {
+    background: #27272a;
+  }
+  .prose pre {
+    background: #27272a;
+  }
+  .prose a {
+    color: #60a5fa;
+  }
 }

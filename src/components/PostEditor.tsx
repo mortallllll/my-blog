@@ -1,0 +1,230 @@
+'use client';
+
+import { useState } from 'react';
+import type { Post } from '@/lib/posts';
+
+interface PostEditorProps {
+  post?: Post; // undefined = create mode
+  onSave: (data: {
+    slug: string;
+    meta: {
+      title: string;
+      date: string;
+      description: string;
+      tags: string[];
+      draft: boolean;
+    };
+    content: string;
+  }) => Promise<void>;
+  onDelete?: () => Promise<void>;
+}
+
+export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) {
+  const isEdit = !!post;
+
+  const [slug, setSlug] = useState(post?.slug || '');
+  const [title, setTitle] = useState(post?.meta.title || '');
+  const [date, setDate] = useState(post?.meta.date || new Date().toISOString().split('T')[0]);
+  const [description, setDescription] = useState(post?.meta.description || '');
+  const [tagsInput, setTagsInput] = useState(post?.meta.tags.join(', ') || '');
+  const [draft, setDraft] = useState(post?.meta.draft ?? false);
+  const [content, setContent] = useState(post?.content || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!title.trim()) {
+      setError('标题不能为空');
+      return;
+    }
+    if (!isEdit && !slug.trim()) {
+      setError('URL 标识不能为空');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave({
+        slug: slug.trim() || post!.slug,
+        meta: {
+          title: title.trim(),
+          date,
+          description: description.trim(),
+          tags: tagsInput
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean),
+          draft,
+        },
+        content,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '保存失败';
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) return;
+
+    setDeleting(true);
+    try {
+      await onDelete();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '删除失败';
+      setError(message);
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            标题 *
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+            placeholder="文章标题"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            URL 标识 {!isEdit && '*'}
+          </label>
+          <input
+            type="text"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            disabled={isEdit}
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+            placeholder="my-article-slug"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            日期
+          </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            标签 (逗号分隔)
+          </label>
+          <input
+            type="text"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+            placeholder="技术, 生活, 教程"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          摘要描述
+        </label>
+        <input
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+          placeholder="简短描述这篇文章..."
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="draft"
+          checked={draft}
+          onChange={(e) => setDraft(e.target.checked)}
+          className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-700"
+        />
+        <label htmlFor="draft" className="text-sm text-zinc-700 dark:text-zinc-300">
+          标记为草稿（仅管理员可见）
+        </label>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            内容 (Markdown) *
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          >
+            {showPreview ? '编辑' : '预览'}
+          </button>
+        </div>
+        {showPreview ? (
+          <div className="prose prose-zinc max-w-none rounded-lg border border-zinc-300 bg-white p-4 min-h-[300px] dark:prose-invert dark:border-zinc-700 dark:bg-zinc-800">
+            {/* Simple preview — convert basic markdown to show structure */}
+            <pre className="whitespace-pre-wrap font-sans text-sm text-zinc-700 dark:text-zinc-300">
+              {content || '(空内容)'}
+            </pre>
+          </div>
+        ) : (
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={18}
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+            placeholder="## 开始写作...&#10;&#10;支持 Markdown 格式。"
+          />
+        )}
+      </div>
+
+      <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-700">
+        <div>
+          {isEdit && onDelete && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition"
+            >
+              {deleting ? '删除中...' : '删除文章'}
+            </button>
+          )}
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition"
+        >
+          {saving ? '保存中...' : isEdit ? '更新文章' : '发布文章'}
+        </button>
+      </div>
+    </form>
+  );
+}
