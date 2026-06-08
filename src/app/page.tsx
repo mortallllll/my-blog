@@ -8,7 +8,7 @@ interface HomePageProps {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const { search } = await searchParams;
-  const posts = getAllPosts(false); // Only published posts
+  const posts = await getAllPosts(false); // Only published posts
 
   const filteredPosts = search
     ? posts.filter(

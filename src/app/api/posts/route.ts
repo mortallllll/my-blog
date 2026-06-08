@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const search = searchParams.get('search') || '';
 
-  let posts = getAllPosts(admin);
+  let posts = await getAllPosts(admin);
 
   if (search) {
     const keyword = search.toLowerCase();
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const post = createPost(slug, meta, content);
+    const post = await createPost(slug, meta, content);
     return NextResponse.json(post, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : '创建失败';

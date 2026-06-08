@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return NextResponse.json({ error: '文章不存在' }, { status: 404 });
@@ -39,7 +39,7 @@ export async function PUT(
       );
     }
 
-    const post = updatePost(slug, meta, content);
+    const post = await updatePost(slug, meta, content);
     return NextResponse.json(post);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : '更新失败';
@@ -57,7 +57,7 @@ export async function DELETE(
   }
 
   const { slug } = await params;
-  const success = deletePost(slug);
+  const success = await deletePost(slug);
 
   if (!success) {
     return NextResponse.json({ error: '文章不存在' }, { status: 404 });
