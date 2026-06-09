@@ -124,7 +124,7 @@ function DashboardContent() {
             返回列表
           </button>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <PostEditor onSave={handleCreate} />
         </div>
       </div>
@@ -149,7 +149,7 @@ function DashboardContent() {
             返回列表
           </button>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <PostEditor
             post={editingPost}
             onSave={handleUpdate}

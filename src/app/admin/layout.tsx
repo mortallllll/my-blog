@@ -12,7 +12,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
+    <div className="mx-auto max-w-4xl px-3 sm:px-4 py-6 sm:py-12">
       <ToastProvider>{children}</ToastProvider>
     </div>
   );

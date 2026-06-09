@@ -195,20 +195,20 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
           </span>
           <span className="text-xs text-purple-400 dark:text-purple-500">DeepSeek</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={aiTopic}
             onChange={(e) => setAiTopic(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleGenerate())}
-            placeholder="输入主题或标签，如：Python 入门教程"
+            placeholder="输入主题，如：Python 入门教程"
             className="flex-1 rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-purple-700 dark:bg-zinc-800 dark:text-zinc-200 dark:focus:border-purple-400 dark:focus:ring-purple-800"
           />
           <button
             type="button"
             onClick={handleGenerate}
             disabled={generating || !aiTopic.trim()}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition shrink-0"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition sm:shrink-0"
           >
             {generating ? (
               <>
