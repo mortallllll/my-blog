@@ -82,6 +82,7 @@ export default function HomePageClient({ allPosts }: { allPosts: Post[] }) {
     <div className="mx-auto flex max-w-6xl gap-6 px-4">
       {/* 左侧导航栏 */}
       <Sidebar
+        posts={allPosts}
         activeTag={tag}
         activeDate={date}
         onTagChange={setTag}
