@@ -144,16 +144,6 @@ function injectStyleTag(settings: AppSettings): void {
       --leaf-accent: ${settings.theme === 'dark' ? leaf.leafAccentDark : leaf.leafAccent};
     }
 ${darkBlock}`;
-
-  styleEl.textContent = `
-    :root {
-      --navbar-bg: ${navbarBg};
-      --leaf-fill: ${leaf.leafFill};
-      --leaf-stroke: ${leaf.leafStroke};
-      --vine-color: ${leaf.vineColor};
-      --leaf-accent: ${leaf.leafAccent};
-    }
-${darkBlock}`;
 }
 
 function removeStyleTag(): void {
