@@ -6,7 +6,7 @@
 
 ---
 
-## [Unreleased]
+## [0.3.0] - 2026-06-09
 
 ### Added
 - 复古树叶边框装饰（`VintageLeafBorder` 组件）
