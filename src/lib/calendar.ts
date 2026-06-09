@@ -7,6 +7,14 @@ export interface CalendarDay {
   level: 0 | 1 | 2 | 3;
 }
 
+/** Date → 本地时区 YYYY-MM-DD 字符串（避免 UTC 时区偏移） */
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /** 由文章列表计算出每日发文数量并映射为热度等级 */
 export function computeCalendarData(
   posts: Post[],
@@ -36,7 +44,7 @@ export function computeCalendarData(
     for (let d = 0; d < 7; d++) {
       const date = new Date(start);
       date.setDate(date.getDate() + w * 7 + d);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = toLocalDateStr(date);
       const count = countMap.get(dateStr) || 0;
 
       let level: 0 | 1 | 2 | 3;
