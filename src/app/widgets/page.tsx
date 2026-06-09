@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 
 interface Widget {
@@ -17,17 +17,33 @@ const WIDGETS: Widget[] = [
   },
 ];
 
-// 添加更多组件时只需在此数组中追加即可
-// {
-//   name: '组件名',
-//   file: '文件名.html',
-//   description: '简短描述',
-// },
-
 export default function WidgetsPage() {
   const [active, setActive] = useState<string | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const current = WIDGETS.find((w) => w.name === active);
+
+  // 监听 ESC 退出全屏
+  useEffect(() => {
+    function onFsChange() {
+      setFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  const enterFullscreen = useCallback(() => {
+    containerRef.current?.requestFullscreen().catch(() => {});
+  }, []);
+
+  const exitFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
+  const toggleFullscreen = fullscreen ? exitFullscreen : enterFullscreen;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -78,19 +94,51 @@ export default function WidgetsPage() {
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
               {current.name}
             </h2>
-            <button
-              onClick={() => setActive(null)}
-              className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
-            >
-              ✕ 关闭
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleFullscreen}
+                className="inline-flex items-center gap-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                {fullscreen ? (
+                  <>
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    缩小
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                    全屏
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setActive(null)}
+                className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+              >
+                ✕ 关闭
+              </button>
+            </div>
           </div>
-          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+
+          {/* iframe 容器（全屏目标） */}
+          <div
+            ref={containerRef}
+            className={`overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 ${
+              fullscreen ? 'flex items-center justify-center' : ''
+            }`}
+          >
             <iframe
               src={`/widgets/${current.file}`}
               title={current.name}
               className="w-full border-0"
-              style={{ height: 'calc(100vh - 280px)', minHeight: '600px' }}
+              style={{
+                height: fullscreen ? '100vh' : 'calc(100vh - 280px)',
+                minHeight: fullscreen ? '100vh' : '600px',
+              }}
             />
           </div>
         </div>
