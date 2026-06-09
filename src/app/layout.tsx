@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
@@ -69,7 +70,7 @@ export default function RootLayout({
           {/* Main content */}
           <main className="flex-1">
             <div className="mx-auto flex max-w-6xl gap-6">
-              <Sidebar />
+              <Suspense fallback={null}><Sidebar /></Suspense>
               <div className="flex-1 min-w-0">{children}</div>
             </div>
           </main>

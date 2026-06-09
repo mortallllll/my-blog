@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { Post } from '@/lib/posts';
 import {
   computeCalendarData,
@@ -14,7 +16,24 @@ interface Props {
   posts: Post[];
 }
 
+/** 构建筛选 URL：保留现有参数，覆盖 tag / date / search */
+function buildDateUrl(
+  currentParams: URLSearchParams,
+  date: string | null
+): string {
+  const params = new URLSearchParams(currentParams.toString());
+  params.delete('date');
+  params.delete('search');
+  if (date) params.set('date', date);
+  if (!params.get('tag')) params.delete('tag');
+  const qs = params.toString();
+  return qs ? `/?${qs}` : '/';
+}
+
 export default function ContributionCalendar({ posts }: Props) {
+  const searchParams = useSearchParams();
+  const activeDate = searchParams.get('date') || '';
+
   const { grid, monthLabels } = useMemo(() => {
     const g = computeCalendarData(posts, 26);
     return { grid: g, monthLabels: getMonthLabels(g) };
@@ -26,7 +45,6 @@ export default function ContributionCalendar({ posts }: Props) {
 
   return (
     <div>
-      {/* 标题 */}
       <h4 className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2">
         文章发布日历
       </h4>
@@ -35,13 +53,14 @@ export default function ContributionCalendar({ posts }: Props) {
         {/* 月份标签 */}
         <div className="mb-1 ml-7 flex text-[10px] text-zinc-400 dark:text-zinc-500">
           {monthLabels.map((ml, i) => {
-            // 计算偏移量：每个格子 ~13px 宽 + 2px gap
             const prevCol = i > 0 ? monthLabels[i - 1].colIndex : 0;
             const gap = ml.colIndex - prevCol;
             return (
               <span
                 key={ml.label}
-                style={{ marginLeft: i === 0 ? ml.colIndex * 15 : (gap - 1) * 15 }}
+                style={{
+                  marginLeft: i === 0 ? ml.colIndex * 15 : (gap - 1) * 15,
+                }}
                 className="whitespace-nowrap"
               >
                 {ml.label}
@@ -51,7 +70,7 @@ export default function ContributionCalendar({ posts }: Props) {
         </div>
 
         <div className="flex gap-0.5">
-          {/* 星期标签（左列） */}
+          {/* 星期标签 */}
           <div className="flex flex-col gap-0.5 mr-1 pt-0">
             {DAY_LABELS.map((label, i) => (
               <div
@@ -70,13 +89,54 @@ export default function ContributionCalendar({ posts }: Props) {
               <div key={w} className="flex flex-col gap-0.5">
                 {grid.map((dayRow, d) => {
                   const day = dayRow[w];
-                  return (
+                  const isActive = activeDate === day.date;
+                  const isFuture =
+                    new Date(day.date + 'T00:00:00') > new Date();
+
+                  // 未来日期或无数文章的日期不可点击
+                  const clickable = !isFuture && day.count > 0;
+
+                  const cell = (
                     <div
-                      key={`${w}-${d}`}
-                      className={`h-[13px] w-[13px] rounded-[2px] ${getLevelColor(day.level)}`}
-                      title={`${formatDateCN(day.date)}${day.count > 0 ? ` · ${day.count} 篇文章` : ' · 无文章'}`}
+                      className={`h-[13px] w-[13px] rounded-[2px] ${getLevelColor(
+                        day.level
+                      )} ${
+                        isActive
+                          ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-blue-400'
+                          : ''
+                      } ${
+                        clickable
+                          ? 'cursor-pointer hover:ring-2 hover:ring-zinc-400 dark:hover:ring-zinc-500'
+                          : ''
+                      }`}
+                      title={
+                        isFuture
+                          ? formatDateCN(day.date)
+                          : `${formatDateCN(day.date)}${
+                              day.count > 0
+                                ? ` · ${day.count} 篇文章`
+                                : ' · 无文章'
+                            }`
+                      }
                     />
                   );
+
+                  if (clickable) {
+                    return (
+                      <Link
+                        key={`${w}-${d}`}
+                        href={buildDateUrl(
+                          searchParams,
+                          isActive ? null : day.date
+                        )}
+                        scroll={false}
+                      >
+                        {cell}
+                      </Link>
+                    );
+                  }
+
+                  return <div key={`${w}-${d}`}>{cell}</div>;
                 })}
               </div>
             ))}
@@ -92,6 +152,22 @@ export default function ContributionCalendar({ posts }: Props) {
         <div className={`h-2.5 w-2.5 rounded-sm ${getLevelColor(2)}`} />
         <div className={`h-2.5 w-2.5 rounded-sm ${getLevelColor(3)}`} />
         <span>多</span>
+
+        {/* 清除日期筛选 */}
+        {activeDate && (
+          <Link
+            href={(() => {
+              const p = new URLSearchParams(searchParams.toString());
+              p.delete('date');
+              const qs = p.toString();
+              return qs ? `/?${qs}` : '/';
+            })()}
+            scroll={false}
+            className="ml-auto text-blue-500 hover:underline"
+          >
+            清除日期
+          </Link>
+        )}
       </div>
     </div>
   );
