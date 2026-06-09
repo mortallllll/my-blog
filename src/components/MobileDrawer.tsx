@@ -1,9 +1,18 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Post } from '@/lib/posts';
 import ContributionCalendar from '@/components/ContributionCalendar';
 import TagList from '@/components/TagList';
+
+const OPEN_EVENT = 'open-mobile-drawer';
+
+/** 触发抽屉打开（由导航栏按钮调用） */
+export function emitOpenDrawer() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+  }
+}
 
 interface Props {
   posts: Post[];
@@ -24,19 +33,14 @@ export default function MobileDrawer({
 
   const close = useCallback(() => setOpen(false), []);
 
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener(OPEN_EVENT, handler);
+    return () => window.removeEventListener(OPEN_EVENT, handler);
+  }, []);
+
   return (
     <>
-      {/* 汉堡按钮 — 移动端固定左上角 */}
-      <button
-        onClick={() => setOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-50 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/80 backdrop-blur-sm shadow border border-zinc-200 text-zinc-600 active:bg-zinc-100 transition dark:bg-zinc-900/80 dark:border-zinc-700 dark:text-zinc-400 dark:active:bg-zinc-800"
-        aria-label="打开侧边栏"
-      >
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
       {/* 遮罩层 */}
       {open && (
         <div className="fixed inset-0 z-[100] lg:hidden">
@@ -60,19 +64,13 @@ export default function MobileDrawer({
             </div>
 
             <div className="p-4 space-y-5">
-              {/* 统计数字 */}
               <StatsInline posts={posts} />
-
-              {/* 日历 */}
               <ContributionCalendar
                 posts={posts}
                 activeDate={activeDate}
                 onDateChange={(d) => { onDateChange(d); close(); }}
               />
-
               <hr className="border-zinc-200 dark:border-zinc-700" />
-
-              {/* 标签 */}
               <TagList
                 posts={posts}
                 activeTag={activeTag}
@@ -86,7 +84,6 @@ export default function MobileDrawer({
   );
 }
 
-/** 移动端的行内统计数字 */
 function StatsInline({ posts }: { posts: Post[] }) {
   const sorted = [...posts].sort(
     (a, b) => new Date(a.meta.date).getTime() - new Date(b.meta.date).getTime()
@@ -99,7 +96,6 @@ function StatsInline({ posts }: { posts: Post[] }) {
     now.setHours(0, 0, 0, 0);
     days = Math.max(1, Math.ceil((now.getTime() - first.getTime()) / 86400000));
   }
-
   return (
     <div className="flex items-center gap-4">
       <div className="flex items-baseline gap-0.5">

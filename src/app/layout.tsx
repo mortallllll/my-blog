@@ -4,6 +4,7 @@ import Link from 'next/link';
 import VintageLeafBorder from '@/components/VintageLeafBorder';
 import { SettingsProvider } from '@/components/SettingsProvider';
 import { NavbarClient } from '@/components/NavbarClient';
+import { MobileMenuBtn } from '@/components/MobileMenuBtn';
 import './globals.css';
 
 const geistSans = Geist({
@@ -41,12 +42,15 @@ export default function RootLayout({
           {/* Navbar */}
           <header className="sticky top-0 z-50 border-b border-zinc-200 navbar-dynamic backdrop-blur-sm dark:border-zinc-800">
             <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-              <Link
-                href="/"
-                className="text-lg font-bold text-zinc-900 hover:text-blue-600 transition dark:text-zinc-100 dark:hover:text-blue-400"
-              >
-                📝 WELCOME TO KONGYU'S BLOG
-              </Link>
+              <div className="flex items-center gap-2">
+                <MobileMenuBtn />
+                <Link
+                  href="/"
+                  className="text-lg font-bold text-zinc-900 hover:text-blue-600 transition dark:text-zinc-100 dark:hover:text-blue-400"
+                >
+                  📝 WELCOME TO KONGYU'S BLOG
+                </Link>
+              </div>
               <nav className="flex items-center gap-3 text-sm">
                 <Link
                   href="/"
