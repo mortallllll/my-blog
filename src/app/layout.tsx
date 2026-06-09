@@ -50,6 +50,7 @@ export default function RootLayout({
               <nav className="flex items-center gap-3 text-sm">
                 <Link
                   href="/"
+                  prefetch={true}
                   className="text-zinc-600 hover:text-zinc-900 transition dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   首页
