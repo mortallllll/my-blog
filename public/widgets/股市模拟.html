@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易股票模拟系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50, #1a2a6c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #1a2a6c;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #e6f7ff, #f0f8ff);
+            border-radius: 15px;
+            padding: 15px;
+            flex: 1;
+            min-width: 150px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #1a2a6c;
+        }
+        
+        .card-title {
+            font-weight: bold;
+            color: #1a2a6c;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .card-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #b21f1f;
+        }
+        
+        .positive {
+            color: #28a745 !important;
+        }
+        
+        .negative {
+            color: #dc3545 !important;
+        }
+        
+        .chart-container {
+            height: 250px;
+            margin: 20px 0;
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 10px;
+        }
+        
+        .stock-info {
+            background: #e9ecef;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .stock-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a2a6c;
+        }
+        
+        .current-price {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .price-change {
+            font-size: 16px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .trading-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .section-title {
+            color: #1a2a6c;
+            margin-bottom: 12px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .form-group label {
+            width: 120px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            flex: 1;
+            min-width: 100px;
+            padding: 8px;
+            border: 2px solid #1a2a6c;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-buy {
+            background: linear-gradient(to right, #28a745, #218838);
+        }
+        
+        .btn-sell {
+            background: linear-gradient(to right, #dc3545, #c82333);
+        }
+        
+        .portfolio-section {
+            background: #e9ecef;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .portfolio-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .portfolio-table th, .portfolio-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .portfolio-table th {
+            background-color: #1a2a6c;
+            color: white;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 25px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+        
+        .instructions h3 {
+            color: #1a2a6c;
+            margin-bottom: 8px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 6px 0;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .info-card {
+                min-width: 100%;
+            }
+            
+            .form-group label {
+                width: 100px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>简易股票模拟系统</h1>
+        
+        <div class="dashboard">
+            <div class="info-card">
+                <div class="card-title">现金余额</div>
+                <div id="cash-balance" class="card-value">$10,000.00</div>
+            </div>
+            <div class="info-card">
+                <div class="card-title">持仓市值</div>
+                <div id="portfolio-value" class="card-value">$0.00</div>
+            </div>
+            <div class="info-card">
+                <div class="card-title">总资产</div>
+                <div id="total-value" class="card-value">$10,000.00</div>
+            </div>
+            <div class="info-card">
+                <div class="card-title">总收益</div>
+                <div id="total-return" class="card-value">$0.00</div>
+            </div>
+        </div>
+        
+        <div class="stock-info">
+            <div class="stock-header">
+                <div class="stock-name">科技先锋 (TECH)</div>
+                <div>
+                    <span id="current-price" class="current-price">$100.00</span>
+                    <span id="price-change" class="price-change">+0.00 (0.00%)</span>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="trading-section">
+            <div class="section-title">交易操作</div>
+            <div class="form-group">
+                <label for="trade-type">交易类型:</label>
+                <select id="trade-type" class="form-control">
+                    <option value="buy">买入</option>
+                    <option value="sell">卖出</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="share-amount">股数:</label>
+                <input type="number" id="share-amount" class="form-control" min="1" value="10">
+            </div>
+            <div class="form-group">
+                <label for="order-type">订单类型:</label>
+                <select id="order-type" class="form-control">
+                    <option value="market">市价单</option>
+                    <option value="limit">限价单</option>
+                </select>
+            </div>
+            <div id="limit-price-group" class="form-group" style="display: none;">
+                <label for="limit-price">限价 ($):</label>
+                <input type="number" id="limit-price" class="form-control" min="0.01" value="100.00" step="0.01">
+            </div>
+            <div class="btn-group">
+                <button id="execute-trade" class="btn">执行交易</button>
+                <button id="export-data" class="btn btn-secondary">导出数据</button>
+                <button id="reset-game" class="btn btn-secondary">重置模拟</button>
+            </div>
+        </div>
+        
+        <div id="trade-result" class="result" style="display: none;"></div>
+        
+        <div class="portfolio-section">
+            <div class="section-title">投资组合</div>
+            <table class="portfolio-table">
+                <thead>
+                    <tr>
+                        <th>股票</th>
+                        <th>持股数量</th>
+                        <th>当前价格</th>
+                        <th>市值</th>
+                        <th>成本</th>
+                        <th>盈亏</th>
+                    </tr>
+                </thead>
+                <tbody id="portfolio-body">
+                    <tr>
+                        <td>科技先锋 (TECH)</td>
+                        <td id="shares-held">0</td>
+                        <td id="current-price-portfolio">$100.00</td>
+                        <td id="market-value">$0.00</td>
+                        <td id="cost-basis">$0.00</td>
+                        <td id="profit-loss">$0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="instructions">
+            <h3>系统说明</h3>
+            <ul>
+                <li>起始资金: $10,000</li>
+                <li>模拟股票: 科技先锋 (TECH)，初始价格 $100</li>
+                <li>支持市价单和限价单交易</li>
+                <li>股价每5秒随机波动一次（±0.5%）</li>
+                <li>实时显示投资组合和收益情况</li>
+                <li>可导出完整交易历史为CSV文件</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let cashBalance = 10000;
+        let sharesHeld = 0;
+        let costBasis = 0; // 总成本
+        let currentPrice = 100;
+        let priceHistory = [100];
+        let timeLabels = [0];
+        let tradeHistory = [];
+        let gameTime = 0;
+        let priceUpdateInterval;
+        
+        // DOM元素
+        const cashBalanceEl = document.getElementById('cash-balance');
+        const portfolioValueEl = document.getElementById('portfolio-value');
+        const totalValueEl = document.getElementById('total-value');
+        const totalReturnEl = document.getElementById('total-return');
+        const currentPriceEl = document.getElementById('current-price');
+        const priceChangeEl = document.getElementById('price-change');
+        const sharesHeldEl = document.getElementById('shares-held');
+        const currentPricePortfolioEl = document.getElementById('current-price-portfolio');
+        const marketValueEl = document.getElementById('market-value');
+        const costBasisEl = document.getElementById('cost-basis');
+        const profitLossEl = document.getElementById('profit-loss');
+        const tradeResultEl = document.getElementById('trade-result');
+        
+        // 交易相关元素
+        const tradeTypeSelect = document.getElementById('trade-type');
+        const shareAmountInput = document.getElementById('share-amount');
+        const orderTypeSelect = document.getElementById('order-type');
+        const limitPriceGroup = document.getElementById('limit-price-group');
+        const limitPriceInput = document.getElementById('limit-price');
+        const executeTradeBtn = document.getElementById('execute-trade');
+        const exportDataBtn = document.getElementById('export-data');
+        const resetGameBtn = document.getElementById('reset-game');
+        
+        // 图表
+        let priceChart = null;
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        
+        // 初始化图表
+        function initChart() {
+            if (priceChart) {
+                priceChart.destroy();
+            }
+            
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: '股价 ($)',
+                        data: priceHistory,
+                        borderColor: '#1a2a6c',
+                        backgroundColor: 'rgba(26, 42, 108, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 2,
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间 (秒)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '价格 ($)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 0
+                    }
+                }
+            });
+        }
+        
+        // 更新UI
+        function updateUI() {
+            // 更新价格显示
+            currentPriceEl.textContent = `$${currentPrice.toFixed(2)}`;
+            currentPricePortfolioEl.textContent = `$${currentPrice.toFixed(2)}`;
+            
+            // 计算市值
+            const marketValue = sharesHeld * currentPrice;
+            marketValueEl.textContent = `$${marketValue.toFixed(2)}`;
+            
+            // 更新持仓信息
+            sharesHeldEl.textContent = sharesHeld;
+            costBasisEl.textContent = `$${costBasis.toFixed(2)}`;
+            
+            // 计算盈亏
+            const profitLoss = marketValue - costBasis;
+            profitLossEl.textContent = `$${profitLoss.toFixed(2)}`;
+            profitLossEl.className = profitLoss >= 0 ? 'positive' : 'negative';
+            
+            // 更新资金信息
+            cashBalanceEl.textContent = `$${cashBalance.toFixed(2)}`;
+            portfolioValueEl.textContent = `$${marketValue.toFixed(2)}`;
+            const totalValue = cashBalance + marketValue;
+            totalValueEl.textContent = `$${totalValue.toFixed(2)}`;
+            const totalReturn = totalValue - 10000;
+            totalReturnEl.textContent = `$${totalReturn.toFixed(2)}`;
+            totalReturnEl.className = totalReturn >= 0 ? 'positive' : 'negative';
+            
+            // 更新图表
+            if (priceChart) {
+                priceChart.data.labels = timeLabels;
+                priceChart.data.datasets[0].data = priceHistory;
+                priceChart.update();
+            }
+        }
+        
+        // 更新股价
+        function updatePrice() {
+            // 随机波动 ±0.5%
+            const changePercent = (Math.random() - 0.5) * 0.01; // -0.5% to +0.5%
+            const newPrice = currentPrice * (1 + changePercent);
+            currentPrice = Math.max(0.01, newPrice); // 确保价格不低于$0.01
+            
+            // 记录价格变化
+            priceHistory.push(currentPrice);
+            gameTime += 5;
+            timeLabels.push(gameTime);
+            
+            // 限制历史记录长度（最多100个点）
+            if (priceHistory.length > 100) {
+                priceHistory.shift();
+                timeLabels.shift();
+            }
+            
+            // 计算价格变化
+            const priceChange = currentPrice - priceHistory[priceHistory.length - 2];
+            const percentChange = (priceChange / priceHistory[priceHistory.length - 2]) * 100;
+            
+            // 更新价格变化显示
+            priceChangeEl.textContent = `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)} (${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%)`;
+            priceChangeEl.className = `price-change ${priceChange >= 0 ? 'positive' : 'negative'}`;
+            
+            // 更新UI
+            updateUI();
+        }
+        
+        // 执行交易
+        function executeTrade() {
+            const tradeType = tradeTypeSelect.value;
+            const shares = parseInt(shareAmountInput.value);
+            const orderType = orderTypeSelect.value;
+            const limitPrice = parseFloat(limitPriceInput.value);
+            
+            // 验证输入
+            if (isNaN(shares) || shares <= 0) {
+                showTradeResult("请输入有效的股数！", false);
+                return;
+            }
+            
+            // 检查限价单条件
+            if (orderType === "limit") {
+                if (tradeType === "buy" && currentPrice > limitPrice) {
+                    showTradeResult(`当前价格 $${currentPrice.toFixed(2)} 高于限价 $${limitPrice.toFixed(2)}，无法买入！`, false);
+                    return;
+                }
+                if (tradeType === "sell" && currentPrice < limitPrice) {
+                    showTradeResult(`当前价格 $${currentPrice.toFixed(2)} 低于限价 $${limitPrice.toFixed(2)}，无法卖出！`, false);
+                    return;
+                }
+            }
+            
+            // 执行交易
+            if (tradeType === "buy") {
+                const totalCost = shares * currentPrice;
+                if (totalCost > cashBalance) {
+                    showTradeResult("现金不足，无法完成交易！", false);
+                    return;
+                }
+                
+                // 执行买入
+                cashBalance -= totalCost;
+                sharesHeld += shares;
+                costBasis += totalCost;
+                
+                // 记录交易
+                tradeHistory.push({
+                    time: gameTime,
+                    type: "买入",
+                    shares: shares,
+                    price: currentPrice,
+                    total: totalCost,
+                    balance: cashBalance
+                });
+                
+                showTradeResult(`成功买入 ${shares} 股，花费 $${totalCost.toFixed(2)}！`, true);
+            } else {
+                if (shares > sharesHeld) {
+                    showTradeResult("持股不足，无法完成交易！", false);
+                    return;
+                }
+                
+                // 执行卖出
+                const totalRevenue = shares * currentPrice;
+                cashBalance += totalRevenue;
+                sharesHeld -= shares;
+                
+                // 计算卖出部分的成本（简化计算）
+                const averageCost = costBasis / (sharesHeld + shares);
+                const soldCost = shares * averageCost;
+                costBasis -= soldCost;
+                
+                // 记录交易
+                tradeHistory.push({
+                    time: gameTime,
+                    type: "卖出",
+                    shares: shares,
+                    price: currentPrice,
+                    total: totalRevenue,
+                    balance: cashBalance
+                });
+                
+                showTradeResult(`成功卖出 ${shares} 股，收入 $${totalRevenue.toFixed(2)}！`, true);
+            }
+            
+            // 更新UI
+            updateUI();
+        }
+        
+        // 显示交易结果
+        function showTradeResult(message, isSuccess) {
+            tradeResultEl.textContent = message;
+            tradeResultEl.className = isSuccess ? "result success" : "result error";
+            tradeResultEl.style.display = "block";
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                tradeResultEl.style.display = "none";
+            }, 3000);
+        }
+        
+        // 导出交易历史
+        function exportTradeHistory() {
+            if (tradeHistory.length === 0) {
+                alert("没有交易记录可导出！");
+                return;
+            }
+            
+            // 创建CSV内容
+            let csvContent = "时间(秒),交易类型,股数,价格($),总额($),现金余额($)\n";
+            
+            tradeHistory.forEach(trade => {
+                csvContent += `${trade.time},${trade.type},${trade.shares},${trade.price.toFixed(2)},${trade.total.toFixed(2)},${trade.balance.toFixed(2)}\n`;
+            });
+            
+            // 创建下载链接
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "stock_simulation_trades.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 切换订单类型显示
+        orderTypeSelect.addEventListener('change', function() {
+            if (this.value === 'limit') {
+                limitPriceGroup.style.display = 'flex';
+                limitPriceInput.value = currentPrice.toFixed(2);
+            } else {
+                limitPriceGroup.style.display = 'none';
+            }
+        });
+        
+        // 重置游戏
+        function resetSimulation() {
+            if (confirm("确定要重置模拟吗？所有数据将丢失。")) {
+                cashBalance = 10000;
+                sharesHeld = 0;
+                costBasis = 0;
+                currentPrice = 100;
+                priceHistory = [100];
+                timeLabels = [0];
+                tradeHistory = [];
+                gameTime = 0;
+                
+                clearInterval(priceUpdateInterval);
+                startPriceUpdates();
+                
+                initChart();
+                updateUI();
+                showTradeResult("模拟已重置！", true);
+            }
+        }
+        
+        // 开始价格更新
+        function startPriceUpdates() {
+            priceUpdateInterval = setInterval(updatePrice, 5000); // 每5秒更新一次
+        }
+        
+        // 事件监听
+        executeTradeBtn.addEventListener('click', executeTrade);
+        exportDataBtn.addEventListener('click', exportTradeHistory);
+        resetGameBtn.addEventListener('click', resetSimulation);
+        
+        // 初始化
+        initChart();
+        updateUI();
+        startPriceUpdates();
+    </script>
+</body>
+</html>
