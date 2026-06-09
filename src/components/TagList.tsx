@@ -110,6 +110,7 @@ export default function TagList({ posts, activeTag, onTagChange }: Props) {
               }`}
             >
               {tag}
+              <span className="ml-0.5 opacity-70">{count}</span>
             </button>
           );
         })}
