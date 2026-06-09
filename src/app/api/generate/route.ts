@@ -199,9 +199,17 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     const rawContent = data.choices?.[0]?.message?.content || '';
+
+    // DeepSeek 可能返回 reasoning_content（思考过程）
+    const reasoning = data.choices?.[0]?.message?.reasoning_content || '';
+
     const result = parseGeneratedContent(rawContent, topic);
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      rawOutput: rawContent,       // 原始输出
+      reasoning: reasoning || null, // 思考过程
+    });
   } catch (err) {
     console.error('Generate API error:', err);
     return NextResponse.json({ error: '生成失败，请重试' }, { status: 500 });

@@ -37,6 +37,16 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
   // ---- AI 生成状态 ----
   const [aiTopic, setAiTopic] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [aiResult, setAiResult] = useState<{
+    reasoning?: string;
+    rawOutput?: string;
+    title?: string;
+    description?: string;
+    content?: string;
+    tags?: string[];
+  } | null>(null);
+  const [showReasoning, setShowReasoning] = useState(false);
+  const [showRaw, setShowRaw] = useState(false);
 
   const handleGenerate = async () => {
     const topic = aiTopic.trim();
@@ -47,6 +57,9 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
 
     setError('');
     setGenerating(true);
+    setAiResult(null);
+    setShowReasoning(false);
+    setShowRaw(false);
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -59,19 +72,28 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
         throw new Error(data.error || '生成失败');
       }
 
+      // 保存思考过程和原始输出
+      setAiResult({
+        reasoning: data.reasoning,
+        rawOutput: data.rawOutput,
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        tags: data.tags,
+      });
+
       // 自动填入编辑器
       setTitle(data.title || '');
       setDescription(data.description || '');
       setContent(data.content || '');
 
-      // tags：统一转成逗号分隔字符串
       const tagsArr = Array.isArray(data.tags) ? data.tags : [];
       setTagsInput(tagsArr.join(', '));
 
-      // 自动生成 slug（只在新创建模式）
+      // 自动生成 slug
       if (!isEdit && data.title) {
         let s = data.title
-          .replace(/[^\w一-鿿\s-]/g, '')  // 只保留字母数字中文空格连字符
+          .replace(/[^\w一-鿿\s-]/g, '')
           .trim()
           .replace(/\s+/g, '-')
           .replace(/-+/g, '-')
@@ -180,7 +202,7 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                生成中...
+                思考中...
               </>
             ) : (
               <>
@@ -192,9 +214,68 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
             )}
           </button>
         </div>
-        <p className="mt-2 text-xs text-purple-400 dark:text-purple-500">
-          输入主题后点击生成，AI 会自动填写标题、摘要、正文和标签，您可以在下方微调后发布
-        </p>
+
+        {/* 生成结果摘要 */}
+        {aiResult && !generating && (
+          <div className="mt-3 space-y-2">
+            {/* 思考过程（如果有） */}
+            {aiResult.reasoning && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowReasoning(!showReasoning)}
+                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400"
+                >
+                  <svg className={`h-3 w-3 transition ${showReasoning ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  思考过程 ({aiResult.reasoning.length} 字)
+                </button>
+                {showReasoning && (
+                  <pre className="mt-1 rounded bg-purple-100/50 p-2 text-xs text-purple-900 whitespace-pre-wrap max-h-40 overflow-y-auto dark:bg-purple-900/30 dark:text-purple-200">
+                    {aiResult.reasoning}
+                  </pre>
+                )}
+              </div>
+            )}
+
+            {/* 原始输出 */}
+            {aiResult.rawOutput && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowRaw(!showRaw)}
+                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400"
+                >
+                  <svg className={`h-3 w-3 transition ${showRaw ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  原始输出
+                </button>
+                {showRaw && (
+                  <pre className="mt-1 rounded bg-purple-100/50 p-2 text-xs text-purple-900 whitespace-pre-wrap max-h-40 overflow-y-auto dark:bg-purple-900/30 dark:text-purple-200">
+                    {aiResult.rawOutput}
+                  </pre>
+                )}
+              </div>
+            )}
+
+            {/* 解析结果确认 */}
+            <p className="text-xs text-purple-500 dark:text-purple-400">
+              ✅ 已填入：{aiResult.title && '标题 '}
+              {aiResult.description && '摘要 '}
+              {aiResult.content && '正文 '}
+              {aiResult.tags?.length ? `标签(${aiResult.tags.length}) ` : ''}
+              — 可在下方微调后发布
+            </p>
+          </div>
+        )}
+
+        {!aiResult && !generating && (
+          <p className="mt-2 text-xs text-purple-400 dark:text-purple-500">
+            输入主题后点击生成，AI 会自动填写标题、摘要、正文和标签
+          </p>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
