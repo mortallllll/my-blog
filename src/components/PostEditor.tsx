@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Post } from '@/lib/posts';
+import { useToast } from '@/components/Toast';
 
 interface PostEditorProps {
   post?: Post;
@@ -44,6 +45,7 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
     description?: string;
     content?: string;
     tags?: string[];
+    _filled?: { title: boolean; slug: boolean; description: boolean; content: boolean; tags: number };
   } | null>(null);
   const [showReasoning, setShowReasoning] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
@@ -72,7 +74,7 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
         throw new Error(data.error || '生成失败');
       }
 
-      // 保存思考过程和原始输出
+      // 保存诊断信息
       setAiResult({
         reasoning: data.reasoning,
         rawOutput: data.rawOutput,
@@ -80,6 +82,8 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
         description: data.description,
         content: data.content,
         tags: data.tags,
+        // 诊断字段
+        _filled: data._filled,
       });
 
       // 自动填入编辑器
@@ -90,16 +94,20 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
       const tagsArr = Array.isArray(data.tags) ? data.tags : [];
       setTagsInput(tagsArr.join(', '));
 
-      // 自动生成 slug
-      if (!isEdit && data.title) {
-        let s = data.title
-          .replace(/[^\w一-鿿\s-]/g, '')
-          .trim()
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .slice(0, 60);
-        if (!s) s = `post-${Date.now().toString(36)}`;
-        setSlug(s);
+      // slug：优先用 AI 生成的英文标识
+      if (!isEdit) {
+        if (data.slug) {
+          setSlug(data.slug);
+        } else {
+          let s = data.title
+            ?.replace(/[^\w一-鿿\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .slice(0, 60) || '';
+          if (!s) s = `post-${Date.now().toString(36)}`;
+          setSlug(s);
+        }
       }
 
       setError('');
@@ -140,13 +148,17 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
         },
         content,
       });
+      toast(isEdit ? '文章已更新' : '文章已发布');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '保存失败';
       setError(message);
+      toast(message, 'error');
     } finally {
       setSaving(false);
     }
   };
+
+  const { toast } = useToast();
 
   const handleDelete = async () => {
     if (!onDelete) return;
@@ -155,10 +167,12 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
     setDeleting(true);
     try {
       await onDelete();
+      toast('文章已删除');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '删除失败';
       setError(message);
       setDeleting(false);
+      toast(message, 'error');
     }
   };
 
@@ -262,10 +276,22 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
 
             {/* 解析结果确认 */}
             <p className="text-xs text-purple-500 dark:text-purple-400">
-              ✅ 已填入：{aiResult.title && '标题 '}
-              {aiResult.description && '摘要 '}
-              {aiResult.content && '正文 '}
-              {aiResult.tags?.length ? `标签(${aiResult.tags.length}) ` : ''}
+              {aiResult._filled ? (
+                <>
+                  API 解析：{aiResult._filled.title ? '✅标题 ' : '❌标题 '}
+                  {aiResult._filled.slug ? '✅slug ' : '❌slug '}
+                  {aiResult._filled.description ? '✅摘要 ' : '❌摘要 '}
+                  {aiResult._filled.content ? '✅正文 ' : '❌正文 '}
+                  {aiResult._filled.tags > 0 ? `✅标签(${aiResult._filled.tags}) ` : '❌标签 '}
+                </>
+              ) : (
+                <>
+                  ✅ 已填入：{aiResult.title && '标题 '}
+                  {aiResult.description && '摘要 '}
+                  {aiResult.content && '正文 '}
+                  {aiResult.tags?.length ? `标签(${aiResult.tags.length}) ` : ''}
+                </>
+              )}
               — 可在下方微调后发布
             </p>
           </div>

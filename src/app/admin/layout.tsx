@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ToastProvider } from '@/components/Toast';
 
 export const metadata: Metadata = {
   title: '管理面板',
@@ -12,7 +13,7 @@ export default function AdminLayout({
 }) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </div>
   );
 }

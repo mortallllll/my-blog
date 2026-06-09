@@ -21,7 +21,7 @@ export default function ContributionCalendar({
   onDateChange,
 }: Props) {
   const { grid, monthLabels } = useMemo(() => {
-    const g = computeCalendarData(posts, 17);
+    const g = computeCalendarData(posts, 16);
     return { grid: g, monthLabels: getMonthLabels(g) };
   }, [posts]);
 
@@ -38,7 +38,7 @@ export default function ContributionCalendar({
             <span
               key={ml.label}
               style={{
-                marginLeft: i === 0 ? ml.colIndex * 13 : (gap - 1) * 13,
+                marginLeft: i === 0 ? ml.colIndex * 12.5 : (gap - 1) * 12.5,
               }}
               className="whitespace-nowrap"
             >

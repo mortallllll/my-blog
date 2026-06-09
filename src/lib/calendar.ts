@@ -19,14 +19,17 @@ export function computeCalendarData(
     countMap.set(d, (countMap.get(d) || 0) + 1);
   }
 
-  // 起始日期：往前推 N 周并对齐到周日
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const start = new Date(today);
-  start.setDate(start.getDate() - weeks * 7);
-  start.setDate(start.getDate() - start.getDay()); // 对齐到周日
 
-  // grid[d] = 一周中第 d 天 (0=Sun … 6=Sat) 的 N 周数据
+  // 对齐到今天所在周的周六（日历最后一列是当前周）
+  const end = new Date(today);
+  end.setDate(end.getDate() + (6 - end.getDay()));
+
+  // 从 end 往前推 N 周到周日（日历第一列）
+  const start = new Date(end);
+  start.setDate(start.getDate() - weeks * 7 + 1);
+
   const grid: CalendarDay[][] = Array.from({ length: 7 }, () => []);
 
   for (let w = 0; w < weeks; w++) {
@@ -42,7 +45,6 @@ export function computeCalendarData(
       else if (count === 2) level = 2;
       else level = 3;
 
-      // 未来日期标记为 -1 以便前端区分
       const isFuture = date > today;
       grid[d].push({
         date: dateStr,

@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: '我的博客',
-    template: '%s | 我的博客',
+    default: 'KONGYU',
+    template: '%s | KONGYU',
   },
   description: '分享技术和生活的个人博客',
 };
@@ -53,6 +53,12 @@ export default function RootLayout({
                   className="text-zinc-600 hover:text-zinc-900 transition dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   首页
+                </Link>
+                <Link
+                  href="/widgets"
+                  className="text-zinc-600 hover:text-zinc-900 transition dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  组件
                 </Link>
                 <Link
                   href="/admin"

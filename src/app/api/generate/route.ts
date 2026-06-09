@@ -86,30 +86,34 @@ function extractDescFromMd(content: string): string {
 
 function normalize(parsed: Record<string, unknown>, topic: string) {
   const title = String(parsed.title || '').trim();
+  const content = String(parsed.content || '');
 
-  // 如果 description 为空，从 content 正文提取第一段
-  let description = String(parsed.description || '').trim();
-  if (!description) {
-    const body = String(parsed.content || '');
-    // 跳过所有标题行（# 开头）、空行、代码块，取第一个真正段落
-    let foundHeading = false;
-    for (const line of body.split('\n')) {
-      const trimmed = line.trim();
-      // 遇到标题行或代码块标记就记下状态，跳过
-      if (/^#+\s/.test(trimmed)) { foundHeading = true; continue; }
-      if (trimmed.startsWith('```')) continue;
-      if (!trimmed) continue;
-      // 找到正文段落：取前 120 字
-      if (foundHeading || !/^#/.test(trimmed)) {
-        description = trimmed.length > 120 ? trimmed.slice(0, 120) + '...' : trimmed;
-        break;
-      }
+  // slug：AI 生成或从标题提取英文
+  let slug = String(parsed.slug || '').trim();
+  if (!slug && title) {
+    // 回退：从标题提取英文单词，无英文则用拼音占位 + 时间戳
+    const enMatch = title.match(/[a-zA-Z0-9]+/g);
+    if (enMatch) {
+      slug = enMatch.join('-').toLowerCase().slice(0, 60);
+    } else {
+      slug = `post-${Date.now().toString(36)}`;
     }
   }
 
-  const content = String(parsed.content || '');
+  // description：优先 AI 生成，空则从正文首段提取
+  let description = String(parsed.description || '').trim();
+  if (!description) {
+    for (const line of content.split('\n')) {
+      const t = line.trim();
+      if (/^#+\s/.test(t)) continue;  // 跳过标题
+      if (t.startsWith('```')) continue;
+      if (!t) continue;
+      description = t.length > 120 ? t.slice(0, 120) + '...' : t;
+      break;
+    }
+  }
 
-  // 规范化 tags
+  // tags：支持数组或逗号/顿号分隔的字符串
   let tags: string[];
   const rawTags = parsed.tags;
   if (Array.isArray(rawTags)) {
@@ -121,27 +125,41 @@ function normalize(parsed: Record<string, unknown>, topic: string) {
   }
   if (tags.length === 0) tags = [topic];
 
-  return { title, description, content, tags };
+  return { title, slug, description, content, tags };
 }
 
 /* ══════════════════════════════════════════════
  * 主解析函数
  * ══════════════════════════════════════════════ */
 
+function generateSlug(title: string): string {
+  if (!title) return `post-${Date.now().toString(36)}`;
+  const enMatch = title.match(/[a-zA-Z0-9]+/g);
+  if (enMatch) return enMatch.join('-').toLowerCase().slice(0, 60);
+  return `post-${Date.now().toString(36)}`;
+}
+
 function parseGeneratedContent(rawContent: string, topic: string) {
   // 第一步：尝试 JSON 解析
   const jsonStr = extractJsonObject(rawContent);
   if (jsonStr) {
-    try {
-      return normalize(JSON.parse(repairJsonNewlines(sanitizeJsonString(jsonStr))), topic);
-    } catch {
+    // 试 repair → 试 sanitize → 试原版
+    const attempts = [
+      () => JSON.parse(repairJsonNewlines(sanitizeJsonString(jsonStr))),
+      () => JSON.parse(sanitizeJsonString(jsonStr)),
+      () => JSON.parse(jsonStr),
+    ];
+    for (const fn of attempts) {
       try {
-        return normalize(JSON.parse(sanitizeJsonString(jsonStr)), topic);
-      } catch { /* 失败，走回退 */ }
+        const parsed = fn();
+        if (parsed && typeof parsed === 'object') {
+          return normalize(parsed, topic);
+        }
+      } catch { /* 继续下一个 */ }
     }
   }
 
-  // 第二步：Markdown / 原始文本回退
+  // 第二步：回退（没有 JSON 或全部解析失败）
   const title = extractTitleFromMd(rawContent, topic);
   const description = extractDescFromMd(rawContent);
   let content = rawContent.trim();
@@ -149,7 +167,8 @@ function parseGeneratedContent(rawContent: string, topic: string) {
     const cm = content.match(/"content"\s*:\s*"([\s\S]*?)"\s*[,}]/);
     if (cm) content = cm[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
   }
-  return { title, description, content, tags: [topic] };
+  const slug = generateSlug(title);
+  return { title, slug, description, content, tags: [topic] };
 }
 
 /* ══════════════════════════════════════════════
@@ -171,15 +190,16 @@ export async function POST(request: NextRequest) {
 
     const prompt = `你是一个中文博客作者。请根据主题「${topic}」生成一篇结构完整的博客文章。
 
-要求：
-- title：吸引人的标题（10-20字）
-- description：简短摘要（50-100字）
-- content：Markdown 格式正文，600-1000字，含标题段落列表等
-- tags：3-5个标签
+严格输出一个 JSON 对象（不要用 markdown 代码块包裹），字段要求：
 
-严格输出以下 JSON 对象（不要用代码块包裹）：
+- title：中文标题，10-20字，吸引人
+- slug：英文 URL 标识，由关键词+连字符组成，如 yangming-philosophy-today
+- description：中文摘要，50-100字
+- content：Markdown 正文，600-1000字，用 \\n 表示换行
+- tags：短小精悍的中文标签，逗号分隔，如 哲学,传统文化,心学
 
-{"title":"文章标题","description":"摘要","content":"## 引言\\n\\n正文...","tags":["标签1","标签2","标签3"]}`;
+示例：
+{"title":"阳明心学的现代启示","slug":"yangming-philosophy-today","description":"在快节奏的现代社会...","content":"## 引言\\n\\n阳明心学作为...","tags":"哲学,传统文化,心学"}`;
 
     const response = await fetch(DEEPSEEK_API_URL, {
       method: 'POST',
@@ -214,8 +234,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ...result,
-      rawOutput: rawContent,       // 原始输出
-      reasoning: reasoning || null, // 思考过程
+      rawOutput: rawContent,
+      reasoning: reasoning || null,
+      // 诊断：API 返回的字段列表，方便确认解析结果
+      _filled: {
+        title: !!result.title,
+        slug: !!result.slug,
+        description: !!result.description,
+        content: !!result.content,
+        tags: result.tags?.length || 0,
+      },
     });
   } catch (err) {
     console.error('Generate API error:', err);
