@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Post } from '@/lib/posts';
 
 interface PostEditorProps {
-  post?: Post; // undefined = create mode
+  post?: Post;
   onSave: (data: {
     slug: string;
     meta: {
@@ -33,6 +33,57 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // ---- AI 生成状态 ----
+  const [aiTopic, setAiTopic] = useState('');
+  const [generating, setGenerating] = useState(false);
+
+  const handleGenerate = async () => {
+    const topic = aiTopic.trim();
+    if (!topic) {
+      setError('请输入生成主题或标签');
+      return;
+    }
+
+    setError('');
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || '生成失败');
+      }
+
+      // 自动填入编辑器
+      setTitle(data.title || '');
+      setDescription(data.description || '');
+      setContent(data.content || '');
+      setTagsInput(Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''));
+
+      // 自动生成 slug
+      if (!isEdit && data.title) {
+        const s = data.title
+          .replace(/[^\w一-鿿\s-]/g, '')
+          .trim()
+          .replace(/\s+/g, '-')
+          .toLowerCase()
+          .slice(0, 60);
+        setSlug(s);
+      }
+
+      setError('');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '生成失败';
+      setError(message);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +143,55 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
           {error}
         </div>
       )}
+
+      {/* === AI 生成区域 === */}
+      <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 dark:border-purple-800 dark:bg-purple-950/30">
+        <div className="flex items-center gap-2 mb-3">
+          <svg className="h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+            AI 快速生成
+          </span>
+          <span className="text-xs text-purple-400 dark:text-purple-500">DeepSeek</span>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={aiTopic}
+            onChange={(e) => setAiTopic(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleGenerate())}
+            placeholder="输入主题或标签，如：Python 入门教程"
+            className="flex-1 rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-purple-700 dark:bg-zinc-800 dark:text-zinc-200 dark:focus:border-purple-400 dark:focus:ring-purple-800"
+          />
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={generating || !aiTopic.trim()}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition shrink-0"
+          >
+            {generating ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                生成中...
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                生成文章
+              </>
+            )}
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-purple-400 dark:text-purple-500">
+          输入主题后点击生成，AI 会自动填写标题、摘要、正文和标签，您可以在下方微调后发布
+        </p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -188,7 +288,6 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
         </div>
         {showPreview ? (
           <div className="prose prose-zinc max-w-none rounded-lg border border-zinc-300 bg-white p-4 min-h-[300px] dark:prose-invert dark:border-zinc-700 dark:bg-zinc-800">
-            {/* Simple preview — convert basic markdown to show structure */}
             <pre className="whitespace-pre-wrap font-sans text-sm text-zinc-700 dark:text-zinc-300">
               {content || '(空内容)'}
             </pre>
