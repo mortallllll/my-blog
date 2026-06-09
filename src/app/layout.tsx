@@ -45,7 +45,7 @@ export default function RootLayout({
                 href="/"
                 className="text-lg font-bold text-zinc-900 hover:text-blue-600 transition dark:text-zinc-100 dark:hover:text-blue-400"
               >
-                📝 我的博客
+                📝 WELCOME TO KONGYU'S BLOG
               </Link>
               <nav className="flex items-center gap-3 text-sm">
                 <Link

@@ -79,7 +79,7 @@ export default function HomePageClient({ allPosts }: { allPosts: Post[] }) {
   }, 300);
 
   return (
-    <div className="mx-auto flex max-w-6xl gap-6 px-4">
+    <div className="mx-auto flex max-w-6xl gap-10 px-4">
       {/* 左侧导航栏 */}
       <Sidebar
         posts={allPosts}
