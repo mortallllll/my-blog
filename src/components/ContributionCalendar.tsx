@@ -21,7 +21,7 @@ export default function ContributionCalendar({
   onDateChange,
 }: Props) {
   const { grid, monthLabels } = useMemo(() => {
-    const g = computeCalendarData(posts, 16);
+    const g = computeCalendarData(posts, 14);
     return { grid: g, monthLabels: getMonthLabels(g) };
   }, [posts]);
 
@@ -38,7 +38,7 @@ export default function ContributionCalendar({
             <span
               key={ml.label}
               style={{
-                marginLeft: i === 0 ? ml.colIndex * 12.5 : (gap - 1) * 12.5,
+                marginLeft: i === 0 ? ml.colIndex * 14.5 : (gap - 1) * 14.5,
               }}
               className="whitespace-nowrap"
             >
@@ -79,7 +79,7 @@ export default function ContributionCalendar({
                     if (day.count === 0 || isFuture) return;
                     onDateChange(isActive ? '' : day.date);
                   }}
-                  className={`h-[11px] w-[11px] rounded-sm ${getLevelColor(
+                  className={`h-[13px] w-[13px] rounded-sm ${getLevelColor(
                     day.level
                   )} ${
                     isActive
