@@ -87,14 +87,21 @@ function extractDescFromMd(content: string): string {
 function normalize(parsed: Record<string, unknown>, topic: string) {
   const title = String(parsed.title || '').trim();
 
-  // 如果 description 为空，从 content 前几行提取
+  // 如果 description 为空，从 content 正文提取第一段
   let description = String(parsed.description || '').trim();
   if (!description) {
     const body = String(parsed.content || '');
+    // 跳过所有标题行（# 开头）、空行、代码块，取第一个真正段落
+    let foundHeading = false;
     for (const line of body.split('\n')) {
-      const t = line.replace(/^#+\s*/, '').trim();
-      if (t && !t.startsWith('```')) {
-        description = t.length > 120 ? t.slice(0, 120) + '...' : t;
+      const trimmed = line.trim();
+      // 遇到标题行或代码块标记就记下状态，跳过
+      if (/^#+\s/.test(trimmed)) { foundHeading = true; continue; }
+      if (trimmed.startsWith('```')) continue;
+      if (!trimmed) continue;
+      // 找到正文段落：取前 120 字
+      if (foundHeading || !/^#/.test(trimmed)) {
+        description = trimmed.length > 120 ? trimmed.slice(0, 120) + '...' : trimmed;
         break;
       }
     }
