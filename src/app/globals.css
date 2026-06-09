@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
+/* 让 Tailwind 的 dark: 工具类同时响应系统主题和手动设置 */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *), @media (prefers-color-scheme: dark));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* 导航栏 / 树叶默认值（会被 SettingsProvider 的 <style> 标签覆盖） */
+  --navbar-bg: #ffffff;
+  --leaf-fill: #8b9e7c;
+  --leaf-stroke: #6b7e5c;
+  --vine-color: #7a8e6c;
+  --leaf-accent: #9b8c7a;
 }
 
 @theme inline {
@@ -16,6 +25,11 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --navbar-bg: #1a1a1a;
+    --leaf-fill: #3a5a3c;
+    --leaf-stroke: #2a4a2c;
+    --vine-color: #2a4e2c;
+    --leaf-accent: #5a4c3a;
   }
 }
 
@@ -23,6 +37,111 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+}
+
+/* ===== 导航栏动态颜色 ===== */
+.navbar-dynamic {
+  background-color: var(--navbar-bg);
+}
+
+/* ===== 复古树叶边框动画和样式 ===== */
+
+/* 藤蔓线条 */
+.vintage-vine {
+  stroke: var(--vine-color);
+  stroke-opacity: 0.2;
+  stroke-width: 1;
+  fill: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .vintage-vine {
+    stroke-opacity: 0.15;
+  }
+}
+
+/* 叶片主体 */
+.vintage-leaf {
+  fill: var(--leaf-fill);
+  fill-opacity: 0.25;
+  stroke: var(--leaf-stroke);
+  stroke-opacity: 0.18;
+  stroke-width: 0.5;
+  animation: leaf-sway 5s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .vintage-leaf {
+    fill-opacity: 0.2;
+    stroke-opacity: 0.12;
+  }
+}
+
+/* 叶脉 */
+.vintage-vein {
+  stroke: var(--leaf-stroke);
+  stroke-opacity: 0.12;
+  stroke-width: 0.3;
+  animation: leaf-sway 5s ease-in-out infinite;
+}
+
+/* 浆果渐变 stop */
+.vintage-berry-stop-1 {
+  stop-color: var(--leaf-accent);
+  stop-opacity: 0.5;
+}
+
+.vintage-berry-stop-2 {
+  stop-color: var(--leaf-accent);
+  stop-opacity: 0.15;
+}
+
+/* 浆果 */
+.vintage-berry {
+  animation: berry-pulse 4s ease-in-out infinite;
+}
+
+/* 卷须 */
+.vintage-tendril {
+  animation: tendril-sway 6s ease-in-out infinite;
+}
+
+/* 叶片轻柔摇曳（模拟微风吹拂） */
+@keyframes leaf-sway {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-2px);
+  }
+  75% {
+    transform: translateY(1.5px);
+  }
+}
+
+/* 浆果微微脉动 */
+@keyframes berry-pulse {
+  0%, 100% {
+    r: 3;
+    opacity: 0.6;
+  }
+  50% {
+    r: 3.5;
+    opacity: 0.8;
+  }
+}
+
+/* 卷须轻柔摆动 */
+@keyframes tendril-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(3deg);
+  }
+  70% {
+    transform: rotate(-2deg);
+  }
 }
 
 /* Markdown content styling (prose fallback) */
