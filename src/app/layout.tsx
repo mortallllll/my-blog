@@ -1,11 +1,9 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
 import VintageLeafBorder from '@/components/VintageLeafBorder';
 import { SettingsProvider } from '@/components/SettingsProvider';
 import { NavbarClient } from '@/components/NavbarClient';
-import Sidebar from '@/components/Sidebar';
 import './globals.css';
 
 const geistSans = Geist({
@@ -68,12 +66,7 @@ export default function RootLayout({
           </header>
 
           {/* Main content */}
-          <main className="flex-1">
-            <div className="mx-auto flex max-w-6xl gap-6">
-              <Suspense fallback={null}><Sidebar /></Suspense>
-              <div className="flex-1 min-w-0">{children}</div>
-            </div>
-          </main>
+          <main className="flex-1">{children}</main>
 
           {/* Footer */}
           <footer className="border-t border-zinc-200 bg-white py-8 text-center dark:border-zinc-800 dark:bg-zinc-900">

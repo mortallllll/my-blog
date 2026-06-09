@@ -1,35 +1,15 @@
 'use client';
 
 import { useMemo } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import type { Post } from '@/lib/posts';
 
 interface Props {
   posts: Post[];
+  activeTag: string;
+  onTagChange: (tag: string) => void;
 }
 
-/** 构建筛选 URL：保留现有参数并添加/覆盖指定 key */
-function buildUrl(
-  currentParams: URLSearchParams,
-  set: Record<string, string | null>
-): string {
-  const params = new URLSearchParams(currentParams.toString());
-  for (const [key, value] of Object.entries(set)) {
-    params.delete(key);
-    if (value !== null) params.set(key, value);
-  }
-  // 过滤掉空的 search 参数
-  if (!params.get('search')) params.delete('search');
-  const qs = params.toString();
-  return qs ? `/?${qs}` : '/';
-}
-
-export default function TagList({ posts }: Props) {
-  const searchParams = useSearchParams();
-  const activeTag = searchParams.get('tag') || '';
-
-  // 提取标签及其文章计数
+export default function TagList({ posts, activeTag, onTagChange }: Props) {
   const tagCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const post of posts) {
@@ -50,8 +30,8 @@ export default function TagList({ posts }: Props) {
 
       <div className="flex flex-wrap gap-1.5">
         {/* 全部 */}
-        <Link
-          href={buildUrl(searchParams, { tag: null })}
+        <button
+          onClick={() => onTagChange('')}
           className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
             !activeTag
               ? 'bg-blue-600 text-white dark:bg-blue-500'
@@ -60,15 +40,15 @@ export default function TagList({ posts }: Props) {
         >
           全部
           <span className="ml-1 opacity-70">{posts.length}</span>
-        </Link>
+        </button>
 
         {/* 各标签 */}
         {tagCounts.map(([tag, count]) => {
           const isActive = activeTag === tag;
           return (
-            <Link
+            <button
               key={tag}
-              href={buildUrl(searchParams, { tag: isActive ? null : tag })}
+              onClick={() => onTagChange(isActive ? '' : tag)}
               className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
                 isActive
                   ? 'bg-blue-600 text-white dark:bg-blue-500'
@@ -77,7 +57,7 @@ export default function TagList({ posts }: Props) {
             >
               {tag}
               <span className="ml-1 opacity-70">{count}</span>
-            </Link>
+            </button>
           );
         })}
       </div>

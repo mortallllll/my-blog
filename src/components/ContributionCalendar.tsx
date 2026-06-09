@@ -1,8 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import type { Post } from '@/lib/posts';
 import {
   computeCalendarData,
@@ -14,26 +12,15 @@ import {
 
 interface Props {
   posts: Post[];
+  activeDate: string;
+  onDateChange: (date: string) => void;
 }
 
-/** 构建筛选 URL：保留现有参数，覆盖 tag / date / search */
-function buildDateUrl(
-  currentParams: URLSearchParams,
-  date: string | null
-): string {
-  const params = new URLSearchParams(currentParams.toString());
-  params.delete('date');
-  params.delete('search');
-  if (date) params.set('date', date);
-  if (!params.get('tag')) params.delete('tag');
-  const qs = params.toString();
-  return qs ? `/?${qs}` : '/';
-}
-
-export default function ContributionCalendar({ posts }: Props) {
-  const searchParams = useSearchParams();
-  const activeDate = searchParams.get('date') || '';
-
+export default function ContributionCalendar({
+  posts,
+  activeDate,
+  onDateChange,
+}: Props) {
   const { grid, monthLabels } = useMemo(() => {
     const g = computeCalendarData(posts, 26);
     return { grid: g, monthLabels: getMonthLabels(g) };
@@ -92,12 +79,16 @@ export default function ContributionCalendar({ posts }: Props) {
                   const isActive = activeDate === day.date;
                   const isFuture =
                     new Date(day.date + 'T00:00:00') > new Date();
-
-                  // 未来日期或无数文章的日期不可点击
                   const clickable = !isFuture && day.count > 0;
 
-                  const cell = (
-                    <div
+                  return (
+                    <button
+                      key={`${w}-${d}`}
+                      onClick={() => {
+                        if (!clickable) return;
+                        onDateChange(isActive ? '' : day.date);
+                      }}
+                      disabled={!clickable}
                       className={`h-[13px] w-[13px] rounded-[2px] ${getLevelColor(
                         day.level
                       )} ${
@@ -107,7 +98,7 @@ export default function ContributionCalendar({ posts }: Props) {
                       } ${
                         clickable
                           ? 'cursor-pointer hover:ring-2 hover:ring-zinc-400 dark:hover:ring-zinc-500'
-                          : ''
+                          : 'cursor-default'
                       }`}
                       title={
                         isFuture
@@ -120,23 +111,6 @@ export default function ContributionCalendar({ posts }: Props) {
                       }
                     />
                   );
-
-                  if (clickable) {
-                    return (
-                      <Link
-                        key={`${w}-${d}`}
-                        href={buildDateUrl(
-                          searchParams,
-                          isActive ? null : day.date
-                        )}
-                        scroll={false}
-                      >
-                        {cell}
-                      </Link>
-                    );
-                  }
-
-                  return <div key={`${w}-${d}`}>{cell}</div>;
                 })}
               </div>
             ))}
@@ -153,20 +127,13 @@ export default function ContributionCalendar({ posts }: Props) {
         <div className={`h-2.5 w-2.5 rounded-sm ${getLevelColor(3)}`} />
         <span>多</span>
 
-        {/* 清除日期筛选 */}
         {activeDate && (
-          <Link
-            href={(() => {
-              const p = new URLSearchParams(searchParams.toString());
-              p.delete('date');
-              const qs = p.toString();
-              return qs ? `/?${qs}` : '/';
-            })()}
-            scroll={false}
+          <button
+            onClick={() => onDateChange('')}
             className="ml-auto text-blue-500 hover:underline"
           >
             清除日期
-          </Link>
+          </button>
         )}
       </div>
     </div>
