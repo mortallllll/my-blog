@@ -76,10 +76,9 @@ export default function ContributionCalendar({
                 <button
                   key={`${w}-${d}`}
                   onClick={() => {
-                    if (!clickable) return;
+                    if (day.count === 0 || isFuture) return;
                     onDateChange(isActive ? '' : day.date);
                   }}
-                  disabled={!clickable}
                   className={`h-[11px] w-[11px] rounded-sm ${getLevelColor(
                     day.level
                   )} ${
