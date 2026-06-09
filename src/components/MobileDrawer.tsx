@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Post } from '@/lib/posts';
 import ContributionCalendar from '@/components/ContributionCalendar';
 import TagList from '@/components/TagList';
 
 const OPEN_EVENT = 'open-mobile-drawer';
 
-/** 触发抽屉打开（由导航栏按钮调用） */
 export function emitOpenDrawer() {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(OPEN_EVENT));
@@ -30,14 +29,94 @@ export default function MobileDrawer({
   onDateChange,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [shift, setShift] = useState(0); // 手指拖动偏移
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const dragging = useRef(false);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => {
+    setOpen(false);
+    setShift(0);
+  }, []);
 
   useEffect(() => {
     const handler = () => setOpen(true);
     window.addEventListener(OPEN_EVENT, handler);
     return () => window.removeEventListener(OPEN_EVENT, handler);
   }, []);
+
+  // ---- 全局左边缘右滑 → 打开抽屉 ----
+  useEffect(() => {
+    function onTouchStart(e: TouchEvent) {
+      if (open) return;
+      const t = e.touches[0];
+      if (t.clientX < 30) {
+        touchStart.current = { x: t.clientX, y: t.clientY };
+        dragging.current = true;
+      }
+    }
+    function onTouchMove(e: TouchEvent) {
+      if (!dragging.current || !touchStart.current) return;
+      const t = e.touches[0];
+      const dx = t.clientX - touchStart.current.x;
+      if (dx > 0 && Math.abs(dx) > Math.abs(t.clientY - touchStart.current.y)) {
+        e.preventDefault();
+        setShift(Math.min(dx, 288)); // 最多拖到抽屉宽度
+      }
+    }
+    function onTouchEnd(e: TouchEvent) {
+      if (!dragging.current || !touchStart.current) return;
+      dragging.current = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStart.current.x;
+      const dy = t.clientY - touchStart.current.y;
+      touchStart.current = null;
+      // 右滑超过 60px 且水平为主 → 打开
+      if (dx > 60 && Math.abs(dx) > Math.abs(dy)) {
+        setOpen(true);
+      }
+      setShift(0);
+    }
+
+    window.addEventListener('touchstart', onTouchStart, { passive: false });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [open]);
+
+  // ---- 抽屉面板上左滑 / 右滑 ----
+  function onPanelTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+    dragging.current = true;
+  }
+  function onPanelTouchMove(e: React.TouchEvent) {
+    if (!dragging.current || !touchStart.current) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStart.current.x;
+    // 只响应水平为主的滑动
+    if (Math.abs(dx) > Math.abs(t.clientY - touchStart.current.y)) {
+      // 向左拖或向右拖超过抽屉位置
+      if (dx < 0) setShift(Math.max(dx, -100));
+    }
+  }
+  function onPanelTouchEnd(e: React.TouchEvent) {
+    if (!dragging.current || !touchStart.current) return;
+    dragging.current = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    touchStart.current = null;
+    // 左滑超过 60px → 关闭
+    if (dx < -60 && Math.abs(dx) > Math.abs(dy)) {
+      close();
+    } else {
+      setShift(0);
+    }
+  }
 
   return (
     <>
@@ -48,7 +127,13 @@ export default function MobileDrawer({
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={close}
           />
-          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-zinc-900 shadow-2xl overflow-y-auto animate-slide-in">
+          <div
+            className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-zinc-900 shadow-2xl overflow-y-auto animate-slide-in"
+            style={{ transform: shift ? `translateX(${shift}px)` : undefined, transition: shift ? 'none' : undefined }}
+            onTouchStart={onPanelTouchStart}
+            onTouchMove={onPanelTouchMove}
+            onTouchEnd={onPanelTouchEnd}
+          >
             <div className="sticky top-0 flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm z-10">
               <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
                 导航
