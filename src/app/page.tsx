@@ -2,8 +2,8 @@ import { Suspense } from 'react';
 import { getAllPosts } from '@/lib/posts';
 import HomePageClient from './HomePageClient';
 
-// 强制动态渲染：每次请求都从 KV 拉取最新文章
-export const dynamic = 'force-dynamic';
+// ISR: 10 秒缓存，兼顾速度和新鲜度
+export const revalidate = 10;
 
 export default async function HomePage() {
   const allPosts = await getAllPosts(false);

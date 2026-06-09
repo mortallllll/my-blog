@@ -56,12 +56,14 @@ export default function RootLayout({
                 </Link>
                 <Link
                   href="/widgets"
+                  prefetch={true}
                   className="text-zinc-600 hover:text-zinc-900 transition dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   组件
                 </Link>
                 <Link
                   href="/admin"
+                  prefetch={true}
                   className="text-zinc-400 hover:text-zinc-600 transition dark:text-zinc-500 dark:hover:text-zinc-300"
                 >
                   管理
