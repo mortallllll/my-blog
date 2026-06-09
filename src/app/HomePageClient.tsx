@@ -6,6 +6,7 @@ import type { Post } from '@/lib/posts';
 import { formatDateCN } from '@/lib/calendar';
 import PostCard from '@/components/PostCard';
 import Sidebar from '@/components/Sidebar';
+import MobileDrawer from '@/components/MobileDrawer';
 import { useDebouncedCallback } from 'use-debounce';
 
 /** 同步筛选状态到浏览器 URL（不触发导航） */
@@ -79,8 +80,18 @@ export default function HomePageClient({ allPosts }: { allPosts: Post[] }) {
   }, 300);
 
   return (
+    <>
+      {/* 移动端抽屉（汉堡按钮浮动在顶部） */}
+      <MobileDrawer
+        posts={allPosts}
+        activeTag={tag}
+        activeDate={date}
+        onTagChange={setTag}
+        onDateChange={setDate}
+      />
+
     <div className="mx-auto flex max-w-6xl gap-10 px-4">
-      {/* 左侧导航栏 */}
+      {/* 桌面端左侧导航栏 */}
       <Sidebar
         posts={allPosts}
         activeTag={tag}
@@ -166,6 +177,7 @@ export default function HomePageClient({ allPosts }: { allPosts: Post[] }) {
         )}
       </div>
     </div>
+    </>
   );
 }
 
