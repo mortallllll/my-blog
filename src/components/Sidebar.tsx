@@ -47,8 +47,8 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed top-20 hidden lg:block z-40 overflow-hidden transition-all duration-300 ease-in-out rounded-xl ${
-        collapsed ? 'w-9 left-14' : 'w-56 left-16'
+      className={`hidden lg:block shrink-0 overflow-hidden transition-all duration-300 ease-in-out rounded-xl ${
+        collapsed ? 'w-9' : 'w-56'
       }`}
     >
       {collapsed ? (

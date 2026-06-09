@@ -79,18 +79,22 @@ export default function HomePageClient({ allPosts }: { allPosts: Post[] }) {
   }, 300);
 
   return (
-    <div>
-      {/* 左侧导航栏 — fixed 定位，独立于正文流 */}
-      <Sidebar
-        posts={allPosts}
-        activeTag={tag}
-        activeDate={date}
-        onTagChange={setTag}
-        onDateChange={setDate}
-      />
+    <div className="mx-auto flex max-w-6xl gap-10 px-4">
+      {/* 左侧导航栏 */}
+      <div className="pt-8">
+        <div className="sticky top-20">
+          <Sidebar
+            posts={allPosts}
+            activeTag={tag}
+            activeDate={date}
+            onTagChange={setTag}
+            onDateChange={setDate}
+          />
+        </div>
+      </div>
 
-      {/* 正文 — 居中 */}
-      <div className="mx-auto max-w-4xl px-4 py-12">
+      {/* 正文 */}
+      <div className="flex-1 min-w-0 py-12">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
