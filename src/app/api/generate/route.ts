@@ -171,8 +171,8 @@ export async function POST(request: NextRequest) {
 {"title":"文章标题","description":"简短摘要","content":"## 正文标题\n\n正文段落...","tags":["标签1","标签2","标签3"]}
 
 注意：
-- 输出必须是纯 JSON，不要加 ``` 或任何其他文字
-- content 字段内使用 \n 表示换行，不要包含实际的换行符
+- 输出必须是纯 JSON，不要加 \`\`\` 或任何其他文字
+- content 字段内使用 \\n 表示换行，不要包含实际的换行符
 - tags 必须是字符串数组`;
 
     const response = await fetch(DEEPSEEK_API_URL, {
