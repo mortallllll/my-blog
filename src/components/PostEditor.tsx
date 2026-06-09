@@ -63,16 +63,20 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
       setTitle(data.title || '');
       setDescription(data.description || '');
       setContent(data.content || '');
-      setTagsInput(Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''));
 
-      // 自动生成 slug
+      // tags：统一转成逗号分隔字符串
+      const tagsArr = Array.isArray(data.tags) ? data.tags : [];
+      setTagsInput(tagsArr.join(', '));
+
+      // 自动生成 slug（只在新创建模式）
       if (!isEdit && data.title) {
-        const s = data.title
-          .replace(/[^\w一-鿿\s-]/g, '')
+        let s = data.title
+          .replace(/[^\w一-鿿\s-]/g, '')  // 只保留字母数字中文空格连字符
           .trim()
           .replace(/\s+/g, '-')
-          .toLowerCase()
+          .replace(/-+/g, '-')
           .slice(0, 60);
+        if (!s) s = `post-${Date.now().toString(36)}`;
         setSlug(s);
       }
 
