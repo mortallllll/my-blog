@@ -39,7 +39,7 @@ export default function RootLayout({
           <VintageLeafBorder />
 
           {/* Navbar */}
-          <header className="sticky top-0 z-50 border-b border-zinc-200 navbar-dynamic backdrop-blur-md dark:border-zinc-800">
+          <header className="sticky top-0 z-50 border-b border-zinc-200 navbar-dynamic backdrop-blur-sm dark:border-zinc-800">
             <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
               <Link
                 href="/"

@@ -13,7 +13,7 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   navbarColor: '#ffffff',
-  navbarOpacity: 80,
+  navbarOpacity: 55,
   leafColor: '#8b9e7c',
   theme: 'system',
 };
@@ -30,8 +30,8 @@ export const NAVBAR_COLOR_PRESETS = [
 /** 导航栏透明度快捷选项 */
 export const NAVBAR_OPACITY_PRESETS = [
   { name: '不透明', value: 100 },
-  { name: '半透明', value: 80 },
-  { name: '更透明', value: 60 },
+  { name: '半透明', value: 55 },
+  { name: '透明', value: 25 },
 ];
 
 /** 主题模式选项 */
