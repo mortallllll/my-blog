@@ -7,110 +7,121 @@ interface GenerateRequest {
   topic: string;
 }
 
-/** 清理 JSON 字符串中的常见问题 */
+/** 清理 JSON 字符串常见问题 */
 function sanitizeJsonString(raw: string): string {
   return (
     raw
-      // 去掉首尾空白
       .trim()
-      // 去掉可能的 BOM
-      .replace(/^﻿/, '')
-      // 修复中文引号
-      .replace(/[“”]/g, '"')
-      .replace(/[‘’]/g, "'")
+      .replace(/^﻿/, '')               // BOM
+      .replace(/[“”]/g, '"')           // 中文双引号
+      .replace(/[‘’]/g, "'")           // 中文单引号
   );
 }
 
-/** 从字符串中提取最外层 {} 包裹的有效 JSON */
-function extractJsonObject(text: string): string | null {
-  // 先尝试整个匹配
-  const trimmed = text.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-    return trimmed;
-  }
-
-  // 尝试从 ```json ... ``` 代码块中提取
-  const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-  if (codeBlockMatch) {
-    const inner = codeBlockMatch[1].trim();
-    if (inner.startsWith('{') && inner.endsWith('}')) {
-      return inner;
-    }
-  }
-
-  // 尝试从文本中定位 { 和对应的 }
-  const firstBrace = text.indexOf('{');
-  if (firstBrace === -1) return null;
-
-  // 从第一个 { 往后找匹配的 }
-  let depth = 0;
+/**
+ * 修复 JSON 字符串内未转义的换行符。
+ * DeepSeek 经常在 content 字段值中带入真实换行，
+ * 导致 JSON.parse 抛错。此函数将字符串内部的 literal newline 替换为 \n。
+ */
+function repairJsonNewlines(jsonLike: string): string {
+  const out: string[] = [];
   let inString = false;
   let escape = false;
-  for (let i = firstBrace; i < text.length; i++) {
-    const ch = text[i];
+
+  for (let i = 0; i < jsonLike.length; i++) {
+    const ch = jsonLike[i];
+
     if (escape) {
+      out.push(ch);
       escape = false;
       continue;
     }
+
     if (ch === '\\') {
+      out.push(ch);
       escape = true;
       continue;
     }
+
     if (ch === '"') {
       inString = !inString;
+      out.push(ch);
       continue;
     }
-    if (inString) continue;
-    if (ch === '{') depth++;
-    if (ch === '}') {
-      depth--;
-      if (depth === 0) {
-        return text.slice(firstBrace, i + 1);
-      }
+
+    // 在 JSON 字符串内部：将真实换行 / 回车转为转义形式
+    if (inString && (ch === '\n' || ch === '\r')) {
+      out.push('\\n');
+      // 如果 \r\n 连续，跳过后一个
+      if (ch === '\r' && jsonLike[i + 1] === '\n') i++;
+      continue;
     }
+
+    out.push(ch);
   }
 
+  return out.join('');
+}
+
+/** 从文本中提取 { 到 } 的 JSON 对象 */
+function extractJsonObject(text: string): string | null {
+  const trimmed = text.trim();
+
+  // 移除 ```json ... ``` 包裹
+  const codeMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const src = codeMatch ? codeMatch[1].trim() : trimmed;
+
+  if (!src.startsWith('{')) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') depth++;
+    if (ch === '}') { depth--; if (depth === 0) return src.slice(0, i + 1); }
+  }
   return null;
 }
 
-/** 从 markdown 文本中提取标题（# 开头的行） */
+/** 从 Markdown 中提取 # 标题 */
 function extractTitleFromMd(content: string, fallback: string): string {
   const match = content.match(/^#\s+(.+)$/m);
   return match ? match[1].trim() : fallback;
 }
 
-/** 从 markdown 文本中提取第一段作为描述 */
+/** 从 Markdown 中提取第一段作为描述 */
 function extractDescFromMd(content: string): string {
-  // 跳过标题和空行，取第一个非空段落
   const lines = content.split('\n');
-  let inContent = false;
+  let started = false;
   for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('```')) {
-      if (trimmed.startsWith('#') || trimmed === '') inContent = true;
-      continue;
-    }
-    if (inContent) {
-      // 取前 120 字
-      return trimmed.length > 120 ? trimmed.slice(0, 120) + '...' : trimmed;
-    }
+    const t = line.trim();
+    if (!t || t.startsWith('#') || t.startsWith('```')) { started = true; continue; }
+    if (started) return t.length > 120 ? t.slice(0, 120) + '...' : t;
   }
   return '';
 }
 
 /**
- * 解析 DeepSeek 返回的原始文本，尽力提取 title / description / content / tags。
- * 兼容三种输出：
- * 1. 标准 JSON                           → 直接解析
- * 2. Markdown 代码块包裹的 JSON           → 提取后解析
- * 3. 纯 Markdown 文章（模型不听指令时）    → 从 markdown 推断字段
+ * 解析 DeepSeek 返回内容，尽力提取结构化字段。
+ *
+ * 策略：
+ * 1. 提取 JSON → 修复换行 → 解析
+ * 2. 解析失败 → 从原始文本推断（标题、描述、全文件内容）
+ * 3. 如果原始文本就是看起来像 JSON 的东西 → 把整段当作 content 填入编辑器
  */
 function parseGeneratedContent(rawContent: string, topic: string) {
+  // ---- 第一步：尝试 JSON ----
   const jsonStr = extractJsonObject(rawContent);
-
   if (jsonStr) {
+    // 先用修复版尝试
     try {
-      const parsed = JSON.parse(sanitizeJsonString(jsonStr));
+      const repaired = repairJsonNewlines(sanitizeJsonString(jsonStr));
+      const parsed = JSON.parse(repaired);
       if (parsed && typeof parsed === 'object') {
         return {
           title: String(parsed.title || ''),
@@ -120,19 +131,44 @@ function parseGeneratedContent(rawContent: string, topic: string) {
         };
       }
     } catch {
-      // JSON 解析失败，回退到 markdown 提取
+      // 修复版失败，尝试原版
+      try {
+        const parsed = JSON.parse(sanitizeJsonString(jsonStr));
+        if (parsed && typeof parsed === 'object') {
+          return {
+            title: String(parsed.title || ''),
+            description: String(parsed.description || ''),
+            content: String(parsed.content || ''),
+            tags: Array.isArray(parsed.tags) ? parsed.tags.map(String) : [topic],
+          };
+        }
+      } catch {
+        // JSON 彻底失败，继续回退
+      }
     }
   }
 
-  // ---- 回退：从原始文本提取 ----
-  const title = extractTitleFromMd(rawContent, `关于「${topic}」的文章`);
+  // ---- 第二步：回退 ----
+  // 如果原始文本看起来像 JSON（以 { 开头），取掉 {} 包裹后作为内容填入
+  // 永远不要返回空 content，让作者至少能看到原始输出
+  const title = extractTitleFromMd(rawContent, '');
   const description = extractDescFromMd(rawContent);
-  // 如果 text 本身看起来像纯 JSON 字符串（没被正确包裹），直接用它做内容
-  const content =
-    rawContent.trim().startsWith('{') ? '' : rawContent;
+
+  // 正文：用全文（去掉可能的 JSON 头）
+  let content = rawContent.trim();
+  // 如果只是纯 JSON 对象（没有 markdown），整个当正文
+  if (content.startsWith('{') && content.endsWith('}')) {
+    // 尝试提取 content 字段的原始值
+    const cm = content.match(/"content"\s*:\s*"([\s\S]*?)"\s*[,}]/);
+    if (cm) {
+      content = cm[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    } else {
+      // 提取不到就保留全文
+    }
+  }
 
   return {
-    title,
+    title: title || topic,
     description,
     content,
     tags: [topic],
