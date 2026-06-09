@@ -15,6 +15,16 @@ const WIDGETS: Widget[] = [
     file: '投资策略模拟器.html',
     description: '模拟不同投资策略的收益表现 — 支持固定金额/百分比策略，实时图表',
   },
+  {
+    name: '股市模拟',
+    file: '股市模拟.html',
+    description: '简易股票模拟系统 — 模拟股票买卖交易',
+  },
+  {
+    name: '哥德巴赫猜想验证器',
+    file: '哥德巴赫猜想验证器.html',
+    description: '验证哥德巴赫猜想 — 超大数优化版',
+  },
 ];
 
 export default function WidgetsPage() {
