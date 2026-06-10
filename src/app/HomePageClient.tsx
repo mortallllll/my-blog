@@ -7,6 +7,7 @@ import { formatDateCN } from '@/lib/calendar';
 import PostCard from '@/components/PostCard';
 import Sidebar from '@/components/Sidebar';
 import MobileDrawer from '@/components/MobileDrawer';
+import DailyPost from '@/components/DailyPost';
 import { useDebouncedCallback } from 'use-debounce';
 
 /** 同步筛选状态到浏览器 URL（不触发导航） */
@@ -111,6 +112,9 @@ export default function HomePageClient({ allPosts }: { allPosts: Post[] }) {
             分享技术和生活的个人博客
           </p>
         </div>
+
+        {/* 每日一文 */}
+        <DailyPost posts={allPosts} />
 
         {/* Search */}
         <div className="mb-6">
