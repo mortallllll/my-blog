@@ -163,19 +163,14 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
   const { toast } = useToast();
 
   const handleDelete = async () => {
-    console.log('[PostEditor] handleDelete 开始');
-    if (!onDelete) { console.log('[PostEditor] onDelete 为空, 返回'); return; }
-    if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) { console.log('[PostEditor] 用户取消删除'); return; }
+    if (!onDelete) return;
+    if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) return;
 
-    console.log('[PostEditor] 调用 onDelete()');
     setDeleting(true);
     try {
       await onDelete();
-      console.log('[PostEditor] onDelete() 成功返回, 调用 toast');
       toast('文章已删除');
-      console.log('[PostEditor] toast 调用完成');
     } catch (err: unknown) {
-      console.log('[PostEditor] onDelete() 抛出异常:', err);
       const message = err instanceof Error ? err.message : '删除失败';
       setError(message);
       setDeleting(false);

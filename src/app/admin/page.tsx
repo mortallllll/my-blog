@@ -62,12 +62,8 @@ function DashboardContent() {
     }
 
     toast('文章已发布');
-    // 延迟切视图 — 让 React 先渲染 toast，避免批处理吞掉
-    setTimeout(() => {
-      setViewMode('list');
-      fetchPosts();
-      router.refresh();
-    }, 50);
+    setViewMode('list');
+    fetchPosts();
   };
 
   const handleUpdate = async (data: {
@@ -87,39 +83,26 @@ function DashboardContent() {
     }
 
     toast('文章已更新');
-    setTimeout(() => {
-      setViewMode('list');
-      setEditingPost(null);
-      fetchPosts();
-      router.refresh();
-    }, 50);
+    setViewMode('list');
+    setEditingPost(null);
+    fetchPosts();
   };
 
   const handleDelete = async () => {
-    console.log('[admin] handleDelete 开始, editingPost=', editingPost);
     if (!editingPost) return;
 
     const res = await fetch(`/api/posts/${editingPost.slug}`, {
       method: 'DELETE',
     });
-    console.log('[admin] DELETE 响应 status=', res.status, 'ok=', res.ok);
 
     if (!res.ok) {
       const err = await res.json();
-      console.log('[admin] DELETE 失败:', err);
       throw new Error(err.error || '删除失败');
     }
 
-    console.log('[admin] 准备调用 toast("文章已删除")');
-    toast('文章已删除');
-    console.log('[admin] toast 调用完成, 准备 setTimeout');
-    setTimeout(() => {
-      console.log('[admin] setTimeout 触发, 切换 viewMode');
-      setViewMode('list');
-      setEditingPost(null);
-      fetchPosts();
-      router.refresh();
-    }, 50);
+    setViewMode('list');
+    setEditingPost(null);
+    fetchPosts();
   };
 
   const handleLogout = async () => {
