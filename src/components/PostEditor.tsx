@@ -151,7 +151,6 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
         },
         content,
       });
-      toast(isEdit ? '文章已更新' : '文章已发布');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '保存失败';
       setError(message);
@@ -170,7 +169,6 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
     setDeleting(true);
     try {
       await onDelete();
-      toast('文章已删除');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '删除失败';
       setError(message);

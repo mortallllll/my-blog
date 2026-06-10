@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminGuard from '@/components/AdminGuard';
 import PostEditor from '@/components/PostEditor';
+import { useToast } from '@/components/Toast';
 import type { Post, PostMeta } from '@/lib/posts';
 
 type ViewMode = 'list' | 'create' | 'edit';
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
 
 function DashboardContent() {
   const router = useRouter();
+  const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -58,6 +60,7 @@ function DashboardContent() {
       throw new Error(err.error || '创建失败');
     }
 
+    toast('文章已发布');
     setViewMode('list');
     fetchPosts();
     router.refresh();
@@ -79,6 +82,7 @@ function DashboardContent() {
       throw new Error(err.error || '更新失败');
     }
 
+    toast('文章已更新');
     setViewMode('list');
     setEditingPost(null);
     fetchPosts();
@@ -97,6 +101,7 @@ function DashboardContent() {
       throw new Error(err.error || '删除失败');
     }
 
+    toast('文章已删除');
     setViewMode('list');
     setEditingPost(null);
     fetchPosts();
