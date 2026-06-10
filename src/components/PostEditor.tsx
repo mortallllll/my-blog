@@ -29,6 +29,7 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
   const [description, setDescription] = useState(post?.meta.description || '');
   const [tagsInput, setTagsInput] = useState(post?.meta.tags.join(', ') || '');
   const [draft, setDraft] = useState(post?.meta.draft ?? false);
+  const [pinned, setPinned] = useState(post?.meta.pinned ?? false);
   const [content, setContent] = useState(post?.content || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -145,6 +146,7 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
             .map((t) => t.trim())
             .filter(Boolean),
           draft,
+          pinned,
         },
         content,
       });
@@ -381,6 +383,19 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
         />
         <label htmlFor="draft" className="text-sm text-zinc-700 dark:text-zinc-300">
           标记为草稿（仅管理员可见）
+        </label>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="pinned"
+          checked={pinned}
+          onChange={(e) => setPinned(e.target.checked)}
+          className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-700"
+        />
+        <label htmlFor="pinned" className="text-sm text-zinc-700 dark:text-zinc-300">
+          📌 置顶文章（始终显示在首页最前面）
         </label>
       </div>
 

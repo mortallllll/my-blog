@@ -15,6 +15,7 @@ export interface PostMeta {
   description: string;
   tags: string[];
   draft: boolean;
+  pinned?: boolean;
 }
 
 export interface Post {
@@ -61,9 +62,13 @@ function fileGetAllPosts(includeDrafts: boolean): Post[] {
   });
 
   const filtered = includeDrafts ? posts : posts.filter((p) => !p.meta.draft);
-  return filtered.sort(
-    (a, b) => new Date(b.meta.date).getTime() - new Date(a.meta.date).getTime()
-  );
+  return filtered.sort((a, b) => {
+    // 置顶优先
+    if (a.meta.pinned && !b.meta.pinned) return -1;
+    if (!a.meta.pinned && b.meta.pinned) return 1;
+    // 然后按日期倒序
+    return new Date(b.meta.date).getTime() - new Date(a.meta.date).getTime();
+  });
 }
 
 function fileGetPostBySlug(slug: string): Post | null {
@@ -108,9 +113,13 @@ async function kvGetAllPosts(includeDrafts: boolean): Promise<Post[]> {
   }
 
   const filtered = includeDrafts ? posts : posts.filter((p) => !p.meta.draft);
-  return filtered.sort(
-    (a, b) => new Date(b.meta.date).getTime() - new Date(a.meta.date).getTime()
-  );
+  return filtered.sort((a, b) => {
+    // 置顶优先
+    if (a.meta.pinned && !b.meta.pinned) return -1;
+    if (!a.meta.pinned && b.meta.pinned) return 1;
+    // 然后按日期倒序
+    return new Date(b.meta.date).getTime() - new Date(a.meta.date).getTime();
+  });
 }
 
 async function kvGetPostBySlug(slug: string): Promise<Post | null> {
