@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getComments, addComment, deleteComment } from '@/lib/comments';
 import { isAuthenticated } from '@/lib/auth';
+import { checkSensitive } from '@/lib/moderation';
 
 /** GET /api/comments/[slug] — 获取评论列表 */
 export async function GET(
@@ -33,6 +34,11 @@ export async function POST(
 
     if (content.trim().length > 2000) {
       return NextResponse.json({ error: '内容最长 2000 字' }, { status: 400 });
+    }
+
+    const hit = checkSensitive(nickname.trim()) || checkSensitive(content.trim());
+    if (hit) {
+      return NextResponse.json({ error: `内容包含不适当用语，请修改后重试` }, { status: 400 });
     }
 
     const comment = await addComment(slug, nickname.trim(), content.trim());
