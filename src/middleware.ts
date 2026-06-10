@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /** 单 IP 每分钟最多评论数 */
-const MAX_COMMENTS_PER_MIN = 3;
+const MAX_COMMENTS_PER_MIN = 10;
 
 /** 内存计数器（Edge 环境下按区域复刻，生产环境建议换 Upstash） */
 const ipCounters = new Map<string, { count: number; resetAt: number }>();
