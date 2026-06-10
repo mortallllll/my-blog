@@ -56,6 +56,7 @@ function fileGetAllPosts(includeDrafts: boolean): Post[] {
         description: data.description || '',
         tags: data.tags || [],
         draft: data.draft ?? false,
+        pinned: data.pinned ?? false,
       },
       content,
     } as Post;
@@ -86,6 +87,7 @@ function fileGetPostBySlug(slug: string): Post | null {
       description: data.description || '',
       tags: data.tags || [],
       draft: data.draft ?? false,
+      pinned: data.pinned ?? false,
     },
     content,
   };
@@ -192,6 +194,7 @@ export async function createPost(
     description: meta.description,
     tags: meta.tags,
     draft: meta.draft,
+    pinned: meta.pinned,
   });
   fs.writeFileSync(filePath, frontmatter, 'utf-8');
   return { slug: safe, meta, content };
@@ -218,6 +221,7 @@ export async function updatePost(
     description: meta.description,
     tags: meta.tags,
     draft: meta.draft,
+    pinned: meta.pinned,
   });
   fs.writeFileSync(filePath, frontmatter, 'utf-8');
   return { slug: safe, meta, content };

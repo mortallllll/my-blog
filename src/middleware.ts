@@ -4,16 +4,8 @@ import type { NextRequest } from 'next/server';
 /** 单 IP 每分钟最多评论数 */
 const MAX_COMMENTS_PER_MIN = 10;
 
-/** 内存计数器（Edge 环境下按区域复刻，生产环境建议换 Upstash） */
+/** 内存计数器（Edge 环境冷启频繁，过期条目随实例回收） */
 const ipCounters = new Map<string, { count: number; resetAt: number }>();
-
-// 每分钟清理一次过期计数器
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, val] of ipCounters) {
-    if (now > val.resetAt) ipCounters.delete(key);
-  }
-}, 60_000);
 
 export function middleware(request: NextRequest) {
   // 只拦截评论 POST 请求
