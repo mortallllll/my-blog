@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { getPostBySlug } from '@/lib/posts';
 import { markdownToHtml } from '@/lib/markdown';
 import ReadingProgress from '@/components/ReadingProgress';
+import CommentSection from '@/components/CommentSection';
+import { isAuthenticated } from '@/lib/auth';
 import type { Metadata } from 'next';
 
 interface PostPageProps {
@@ -32,6 +34,7 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const htmlContent = await markdownToHtml(post.content);
+  const admin = await isAuthenticated();
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-12">
@@ -93,6 +96,9 @@ export default async function PostPage({ params }: PostPageProps) {
         "
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
+
+      {/* 评论区 */}
+      <CommentSection slug={post.slug} isAdmin={admin} />
     </article>
   );
 }
