@@ -4,6 +4,7 @@ import { getPostBySlug } from '@/lib/posts';
 import { markdownToHtml } from '@/lib/markdown';
 import ReadingProgress from '@/components/ReadingProgress';
 import CommentSection from '@/components/CommentSection';
+import ViewCounter from '@/components/ViewCounter';
 import { isAuthenticated } from '@/lib/auth';
 import type { Metadata } from 'next';
 
@@ -58,6 +59,8 @@ export default async function PostPage({ params }: PostPageProps) {
           <time dateTime={post.meta.date}>{post.meta.date}</time>
           <span>·</span>
           <ReadingProgress content={post.content} />
+          <span>·</span>
+          <ViewCounter slug={post.slug} track />
           {post.meta.tags.length > 0 && (
             <>
               <span>·</span>
