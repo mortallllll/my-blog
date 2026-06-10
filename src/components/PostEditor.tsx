@@ -163,13 +163,19 @@ export default function PostEditor({ post, onSave, onDelete }: PostEditorProps) 
   const { toast } = useToast();
 
   const handleDelete = async () => {
-    if (!onDelete) return;
+    if (!isEdit || !post) return;
     if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) return;
 
     setDeleting(true);
     try {
-      await onDelete();
+      const res = await fetch(`/api/posts/${post.slug}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || '删除失败');
+      }
       toast('文章已删除');
+      // toast 后再调 onDelete（admin 切换视图）
+      if (onDelete) await onDelete();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '删除失败';
       setError(message);

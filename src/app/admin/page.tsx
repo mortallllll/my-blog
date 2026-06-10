@@ -89,17 +89,7 @@ function DashboardContent() {
   };
 
   const handleDelete = async () => {
-    if (!editingPost) return;
-
-    const res = await fetch(`/api/posts/${editingPost.slug}`, {
-      method: 'DELETE',
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || '删除失败');
-    }
-
+    // API 调用已由 PostEditor 完成，这里只负责切视图
     setViewMode('list');
     setEditingPost(null);
     fetchPosts();
