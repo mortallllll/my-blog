@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getPostBySlug } from '@/lib/posts';
 import { markdownToHtml } from '@/lib/markdown';
+import ReadingProgress from '@/components/ReadingProgress';
 import type { Metadata } from 'next';
 
 interface PostPageProps {
@@ -52,6 +53,8 @@ export default async function PostPage({ params }: PostPageProps) {
         </h1>
         <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
           <time dateTime={post.meta.date}>{post.meta.date}</time>
+          <span>·</span>
+          <ReadingProgress content={post.content} />
           {post.meta.tags.length > 0 && (
             <>
               <span>·</span>
