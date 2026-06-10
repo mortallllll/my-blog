@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
 - title：中文标题，10-20字，吸引人
 - slug：英文 URL 标识，由关键词+连字符组成，如 yangming-philosophy-today
 - description：中文摘要，50-100字
-- content：Markdown 正文，600-1000字，用 \\n 表示换行
+- content：Markdown 正文，3000-10000字，用 \\n 表示换行
 - tags：短小精悍的中文标签，逗号分隔，如 哲学,传统文化,心学
 
 示例：
