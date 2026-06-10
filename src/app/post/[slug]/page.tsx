@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { getPostBySlug } from '@/lib/posts';
 import { markdownToHtml } from '@/lib/markdown';
 import ReadingProgress from '@/components/ReadingProgress';
 import CommentSection from '@/components/CommentSection';
 import ViewCounter from '@/components/ViewCounter';
+import BackLink from '@/components/BackLink';
 import { isAuthenticated } from '@/lib/auth';
 import type { Metadata } from 'next';
 
@@ -40,15 +40,7 @@ export default async function PostPage({ params }: PostPageProps) {
   return (
     <article className="mx-auto max-w-3xl px-4 py-12">
       {/* Back link */}
-      <Link
-        href="/"
-        className="mb-8 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 transition dark:text-zinc-400 dark:hover:text-zinc-200"
-      >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        返回文章列表
-      </Link>
+      <BackLink />
 
       {/* Header */}
       <header className="mb-10">
