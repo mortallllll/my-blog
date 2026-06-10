@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation';
 import { getPostBySlug } from '@/lib/posts';
 import { markdownToHtml } from '@/lib/markdown';
+import { addHeadingIds } from '@/lib/headings';
 import ReadingProgress from '@/components/ReadingProgress';
+import TableOfContents from '@/components/TableOfContents';
 import CommentSection from '@/components/CommentSection';
 import ViewCounter from '@/components/ViewCounter';
 import BackLink from '@/components/BackLink';
@@ -34,7 +36,8 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound();
   }
 
-  const htmlContent = await markdownToHtml(post.content);
+  const rawHtml = await markdownToHtml(post.content);
+  const htmlContent = addHeadingIds(rawHtml);
   const admin = await isAuthenticated();
 
   return (
@@ -91,6 +94,9 @@ export default async function PostPage({ params }: PostPageProps) {
         "
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
+
+      {/* 目录（桌面端右侧悬浮） */}
+      <TableOfContents contentHtml={htmlContent} />
 
       {/* 评论区 */}
       <CommentSection slug={post.slug} isAdmin={admin} />
