@@ -25,6 +25,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [search, setSearch] = useState('');
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -165,6 +166,15 @@ function DashboardContent() {
     );
   }
 
+  // 客户端搜索过滤
+  const filteredPosts = search.trim()
+    ? posts.filter(
+        (p) =>
+          p.meta.title.toLowerCase().includes(search.toLowerCase()) ||
+          p.slug.toLowerCase().includes(search.toLowerCase())
+      )
+    : posts;
+
   // --- Render: List Mode ---
   return (
     <div>
@@ -199,11 +209,22 @@ function DashboardContent() {
         </div>
       </div>
 
+      {/* 搜索框 */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="搜索文章标题或 URL…"
+          className="w-full max-w-md rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+        />
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-300 border-t-blue-600" />
         </div>
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="text-5xl mb-4">📝</div>
           <p className="text-zinc-500 dark:text-zinc-400">
@@ -230,7 +251,7 @@ function DashboardContent() {
               </tr>
             </thead>
             <tbody>
-              {posts.map((post) => (
+              {filteredPosts.map((post) => (
                 <tr
                   key={post.slug}
                   className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
