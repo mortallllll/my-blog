@@ -62,9 +62,12 @@ function DashboardContent() {
     }
 
     toast('文章已发布');
-    setViewMode('list');
-    fetchPosts();
-    router.refresh();
+    // 延迟切视图 — 让 React 先渲染 toast，避免批处理吞掉
+    setTimeout(() => {
+      setViewMode('list');
+      fetchPosts();
+      router.refresh();
+    }, 50);
   };
 
   const handleUpdate = async (data: {
@@ -84,10 +87,12 @@ function DashboardContent() {
     }
 
     toast('文章已更新');
-    setViewMode('list');
-    setEditingPost(null);
-    fetchPosts();
-    router.refresh();
+    setTimeout(() => {
+      setViewMode('list');
+      setEditingPost(null);
+      fetchPosts();
+      router.refresh();
+    }, 50);
   };
 
   const handleDelete = async () => {
@@ -103,10 +108,12 @@ function DashboardContent() {
     }
 
     toast('文章已删除');
-    setViewMode('list');
-    setEditingPost(null);
-    fetchPosts();
-    router.refresh();
+    setTimeout(() => {
+      setViewMode('list');
+      setEditingPost(null);
+      fetchPosts();
+      router.refresh();
+    }, 50);
   };
 
   const handleLogout = async () => {
