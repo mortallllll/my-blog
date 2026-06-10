@@ -14,6 +14,7 @@ interface PostEditorProps {
       description: string;
       tags: string[];
       draft: boolean;
+      pinned?: boolean;
     };
     content: string;
   }) => Promise<void>;
