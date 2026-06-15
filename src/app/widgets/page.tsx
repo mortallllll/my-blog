@@ -25,6 +25,11 @@ const WIDGETS: Widget[] = [
     file: '哥德巴赫猜想验证器.html',
     description: '验证哥德巴赫猜想 — 超大数优化版',
   },
+  {
+    name: '冰语流光 · 励志语录',
+    file: 'ice-quotes.html',
+    description: '弹幕式励志语录展示 — 冰晶粒子背景、留言板、可添加/编辑语录',
+  },
 ];
 
 export default function WidgetsPage() {
