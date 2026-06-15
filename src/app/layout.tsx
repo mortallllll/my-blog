@@ -60,6 +60,13 @@ export default function RootLayout({
                   首页
                 </Link>
                 <Link
+                  href="/books"
+                  prefetch={true}
+                  className="text-zinc-600 hover:text-zinc-900 transition dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  书籍
+                </Link>
+                <Link
                   href="/widgets"
                   prefetch={true}
                   className="text-zinc-600 hover:text-zinc-900 transition dark:text-zinc-400 dark:hover:text-zinc-100"

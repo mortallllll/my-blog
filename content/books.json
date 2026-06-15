@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "deep-work",
+    "meta": {
+      "author": "Cal Newport",
+      "cover": "",
+      "rating": 5,
+      "status": "done",
+      "review": "深度工作是一种稀缺能力。这本书教你如何在分心的世界里专注做重要的事",
+      "tags": ["效率", "个人成长"],
+      "recommend": true
+    },
+    "createdAt": "2025-06-01T00:00:00.000Z",
+    "updatedAt": "2025-06-01T00:00:00.000Z"
+  },
+  {
+    "slug": "the-pragmatic-programmer",
+    "meta": {
+      "author": "David Thomas & Andrew Hunt",
+      "cover": "",
+      "rating": 5,
+      "status": "done",
+      "review": "程序员的经典必读，每一个章节都是实践智慧的结晶",
+      "tags": ["编程", "软件工程"],
+      "recommend": true
+    },
+    "createdAt": "2025-05-15T00:00:00.000Z",
+    "updatedAt": "2025-05-15T00:00:00.000Z"
+  },
+  {
+    "slug": "sapiens",
+    "meta": {
+      "author": "Yuval Noah Harari",
+      "cover": "",
+      "rating": 4,
+      "status": "reading",
+      "review": "从认知革命到科学革命，人类简史带你重新审视我们的过去",
+      "tags": ["历史", "人类学"],
+      "recommend": false
+    },
+    "createdAt": "2025-06-10T00:00:00.000Z",
+    "updatedAt": "2025-06-10T00:00:00.000Z"
+  }
+]
